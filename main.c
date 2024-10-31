@@ -25,6 +25,19 @@ typedef struct {
   int qtde;
 } ListaCad;
 
+typedef struct {
+  Dados *dados;
+  struct CFila *anterior;
+  struct CFila *proximo;
+
+} CFila;
+
+typedef struct {
+  CFila *head;
+  CFila *tail;
+  int qtd;
+} Fila;
+
 void clearBuffer() {
   char c;
   while ((c = getchar()) != '\n' && c != EOF)
@@ -36,6 +49,28 @@ ListaCad *criar_listaCad() {
   lista->primeiro = NULL;
   lista->qtde = 0;
   return lista;
+}
+
+void *criar_fila() {
+  Fila *fila = malloc(sizeof(Fila));
+  fila->head = NULL;
+  fila->tail = NULL;
+  fila->qtd = 0;
+  return fila;
+}
+CFila *criar_cfila(char *nome, int idade, char *RG, Data *entrada) {
+  CFila *cfila = malloc(sizeof(CFila));
+  cfila->anterior = NULL;
+  cfila->proximo = NULL;
+  cfila->dados = malloc(sizeof(Dados));
+  cfila->dados->nome = malloc(strlen(nome) + 1);
+  strcpy(cfila->dados->nome, nome);
+  cfila->dados->idade = idade;
+  cfila->dados->RG = malloc(strlen(RG) + 1);
+  strcpy(cfila->dados->RG, RG);
+  cfila->dados->entrada = entrada;
+
+  return cfila;
 }
 
 Cadastro *criar_cadastro(char *nome, int idade, char *RG, Data *entrada) {
@@ -52,14 +87,51 @@ Cadastro *criar_cadastro(char *nome, int idade, char *RG, Data *entrada) {
   return cadastro;
 }
 
+void *enfileirar(char *nome, int idade, char *RG, Data *entrada, Fila *fila) {
+  CFila *novo = criar_cfila(nome, idade, RG, entrada);
+  if (fila->qtd == 0) {
+    fila->head = novo;
+  } else {
+    fila->tail->proximo = novo;
+    novo->anterior = fila->tail;
+  }
+  fila->tail = novo;
+  fila->qtd++;
+}
+
+
+
+void mostrar_fila(Fila *fila) {
+    CFila *atual = fila->head;
+    while (atual != NULL) {
+        printf("Nome: %s, Idade: %d, RG: %s\n", atual->dados->nome, atual->dados->idade, atual->dados->RG);
+        atual = atual->proximo;
+    }
+    printf("Total na fila: %d\n", fila->qtd);
+}
+desinfeirar(Fila *fila) {
+  if (fila->qtd > 0) {
+    char RG = fila->head->dados->RG;
+    Fila *temp = fila->head;
+    fila->head = fila->head->proximo;
+    if (fila->qtd == 1) {
+      fila->tail = NULL;
+    } else {
+      fila->head->anterior = NULL;
+    }
+    fila->qtd--;
+    free(temp);
+    return fila;
+  }
+  return -1;
+}
+
 void mostrar(ListaCad *lista) {
   Cadastro *atual = lista->primeiro;
   while (atual != NULL) {
     printf("Nome: %s", atual->dados->nome);
-    printf("Data de Entrada: %02d/%02d/%d\n", 
-           atual->dados->entrada->dia, 
-           atual->dados->entrada->mes, 
-           atual->dados->entrada->ano);
+    printf("Data de Entrada: %02d/%02d/%d\n", atual->dados->entrada->dia,
+           atual->dados->entrada->mes, atual->dados->entrada->ano);
     printf("RG: %s", atual->dados->RG);
     printf("Idade: %d\n", atual->dados->idade);
     printf("-----------------------\n");
@@ -74,10 +146,8 @@ void procurar(ListaCad *lista, char *RG) {
     if (strcmp(atual->dados->RG, RG) == 0) {
       printf("-----------------------\n");
       printf("Nome: %s", atual->dados->nome);
-      printf("Data de Entrada: %02d/%02d/%d\n", 
-             atual->dados->entrada->dia, 
-             atual->dados->entrada->mes, 
-             atual->dados->entrada->ano);
+      printf("Data de Entrada: %02d/%02d/%d\n", atual->dados->entrada->dia,
+             atual->dados->entrada->mes, atual->dados->entrada->ano);
       printf("RG: %s", atual->dados->RG);
       printf("Idade: %d\n", atual->dados->idade);
       printf("-----------------------\n");
@@ -102,50 +172,50 @@ void atualizar(ListaCad *lista, char *RG) {
       scanf("%d", &escolha);
       clearBuffer();
       switch (escolha) {
-        case 1: {
-          char novoNome[100];
-          printf("Digite o novo nome: ");
-          fgets(novoNome, sizeof(novoNome), stdin);
-          novoNome[strcspn(novoNome, "\n")] = 0;
-          free(atual->dados->nome);
-          atual->dados->nome = malloc(strlen(novoNome) + 1);
-          strcpy(atual->dados->nome, novoNome);
-          printf("Nome atualizado com sucesso!\n");
-          break;
-        }
-        case 2: {
-          char novoRG[20];
-          printf("Digite o novo RG: ");
-          fgets(novoRG, sizeof(novoRG), stdin);
-          novoRG[strcspn(novoRG, "\n")] = 0;
-          free(atual->dados->RG);
-          atual->dados->RG = malloc(strlen(novoRG) + 1);
-          strcpy(atual->dados->RG, novoRG);
-          printf("RG atualizado com sucesso!\n");
-          break;
-        }
-        case 3: {
-          int novodia, novomes, novoano;
-          printf("Digite a nova data de entrada (dd/mm/aaaa): ");
-          scanf("%d/%d/%d", &novodia, &novomes, &novoano);
-          free(atual->dados->entrada);
-          atual->dados->entrada = malloc(sizeof(Data));
-          atual->dados->entrada->dia = novodia;
-          atual->dados->entrada->mes = novomes;
-          atual->dados->entrada->ano = novoano;
-          printf("Data de entrada atualizada com sucesso!\n");
-          break;
-        }
-        case 4: {
-          int novaIdade;
-          printf("Digite a nova idade: ");
-          scanf("%d", &novaIdade);
-          atual->dados->idade = novaIdade;
-          printf("Idade atualizada com sucesso!\n");
-          break;
-        }
-        default:
-          printf("Opção inválida!\n");
+      case 1: {
+        char novoNome[100];
+        printf("Digite o novo nome: ");
+        fgets(novoNome, sizeof(novoNome), stdin);
+        novoNome[strcspn(novoNome, "\n")] = 0;
+        free(atual->dados->nome);
+        atual->dados->nome = malloc(strlen(novoNome) + 1);
+        strcpy(atual->dados->nome, novoNome);
+        printf("Nome atualizado com sucesso!\n");
+        break;
+      }
+      case 2: {
+        char novoRG[20];
+        printf("Digite o novo RG: ");
+        fgets(novoRG, sizeof(novoRG), stdin);
+        novoRG[strcspn(novoRG, "\n")] = 0;
+        free(atual->dados->RG);
+        atual->dados->RG = malloc(strlen(novoRG) + 1);
+        strcpy(atual->dados->RG, novoRG);
+        printf("RG atualizado com sucesso!\n");
+        break;
+      }
+      case 3: {
+        int novodia, novomes, novoano;
+        printf("Digite a nova data de entrada (dd/mm/aaaa): ");
+        scanf("%d/%d/%d", &novodia, &novomes, &novoano);
+        free(atual->dados->entrada);
+        atual->dados->entrada = malloc(sizeof(Data));
+        atual->dados->entrada->dia = novodia;
+        atual->dados->entrada->mes = novomes;
+        atual->dados->entrada->ano = novoano;
+        printf("Data de entrada atualizada com sucesso!\n");
+        break;
+      }
+      case 4: {
+        int novaIdade;
+        printf("Digite a nova idade: ");
+        scanf("%d", &novaIdade);
+        atual->dados->idade = novaIdade;
+        printf("Idade atualizada com sucesso!\n");
+        break;
+      }
+      default:
+        printf("Opção inválida!\n");
       }
       return;
     }
@@ -276,7 +346,7 @@ int main() {
   int escolha;
   char nome[50], RG[20];
   int idade, dia, mes, ano;
-  FILE *arquivo;
+  
     
     do {
         menu(escolha);
@@ -293,7 +363,7 @@ int main() {
                 
                 switch(subEscolha){
                   case 1 :
-                      arquivo = fopen("cadastros", a);
+                      
                       printf("Nome: ");
                       clearBuffer();
                       fgets(nome, sizeof(nome), stdin);
@@ -360,9 +430,8 @@ int main() {
             
             case 2:
                 do{
-                
-                print_atendimento(subEscolha);
-                scanf("%d", &subEscolha);
+                  print_atendimento(subEscolha);
+                  scanf("%d", &subEscolha);
                 
                 switch(subEscolha){
                   case 1 :
