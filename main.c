@@ -1,3 +1,4 @@
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -99,17 +100,16 @@ void *enfileirar(char *nome, int idade, char *RG, Data *entrada, Fila *fila) {
   fila->qtd++;
 }
 
-
-
 void mostrar_fila(Fila *fila) {
-    CFila *atual = fila->head;
-    while (atual != NULL) {
-        printf("Nome: %s, Idade: %d, RG: %s\n", atual->dados->nome, atual->dados->idade, atual->dados->RG);
-        atual = atual->proximo;
-    }
-    printf("Total na fila: %d\n", fila->qtd);
+  CFila *atual = fila->head;
+  while (atual != NULL) {
+    printf("Nome: %s, Idade: %d, RG: %s\n", atual->dados->nome,
+           atual->dados->idade, atual->dados->RG);
+    atual = atual->proximo;
+  }
+  printf("Total na fila: %d\n", fila->qtd);
 }
-desinfeirar(Fila *fila) {
+int desinfeirar(Fila *fila) {
   if (fila->qtd > 0) {
     char RG = fila->head->dados->RG;
     Fila *temp = fila->head;
@@ -274,44 +274,95 @@ void inserir(ListaCad *lista, char *nome, int idade, char *RG, Data *entrada) {
   }
 }
 
+void menu() {
+  printf("-----------------------\n");
+  printf("Escolha uma opção:\n");
+  printf("1. Cadastrar\n");
+  printf("2. Atendimento\n");
+  printf("3. Pesquisar\n");
+  printf("4. Desfazer\n");
+  printf("5. Carregar / Salvar\n");
+  printf("6. Sobre\n");
+  printf("0. Sair\n");
+  printf("-----------------------\n");
+  printf("Digite sua escolha: ");
+}
+
+void print_cadatrar() {
+  printf("Cadastro: \n");
+  printf("------------------------\n");
+  printf("Qual operacao deseja fazer ? \n");
+  printf("1. Novo Paciente\n");
+  printf("2. Consultar paciente cadastrado\n");
+  printf("3. Mostrar lista completa\n");
+  printf("4. Atualizar dados\n");
+  printf("5. Remover paciente\n");
+  printf("0. Sair\n");
+  printf("------------------------\n");
+  printf("Digite sua escolha: ");
+}
+
+void print_atendimento() {
+  printf("Atendimento: \n");
+  printf("----------------------------------\n");
+  printf("Qual operacao deseja fazer ? \n");
+  printf("1. Enfileirar paciente\n");
+  printf("2. Desinfileirar paciente\n");
+  printf("3. Mostrar fila\n");
+  printf("0. Sair\n");
+  printf("-----------------------------------\n");
+  printf("Digite sua escolha: ");
+}
+
+void print_Sobre() {
+  printf("Sobre: \n");
+  printf("--------------------------------------------\n");
+  printf("Desenvolvedores:\n");
+  printf("Nome: Paulo Andre de Oliveira Hirata\n");
+  printf("Ciclo: Quarto ciclo\n");
+  printf("Curso: Ciencia da computacao\n");
+  printf("Disciplina: Estrutura de dados\n");
+  printf("---------------------------------------------\n");
+  printf("Nome: Victor Merker Binda\n");
+  printf("Ciclo: Quarto ciclo\n");
+  printf("Curso: Ciencia da computacao\n");
+  printf("Disciplina: Estrutura de dados\n");
+  printf("--------------------------------------------\n");
+  printf("Data: 08/11/2024");
+}
+
+void print_pesquisa() {
+  printf("Pesquisar: \n");
+  printf("------------------------------------------------\n");
+  printf("Selecione qual operacao voce deseja realizar\n");
+  printf("1. Registros ordenados por ano\n");
+  printf("2. Registros ordenados por mes\n");
+  printf("3. Registros ordenados por dia\n");
+  printf("4. Registros ordenados por idade\n");
+  printf("------------------------------------------------\n");
+}
 int main() {
   ListaCad *lista = criar_listaCad();
   int escolha;
   char nome[50], RG[20];
   int idade, dia, mes, ano;
+  Fila *fila = criar_fila();
 
   do {
-    printf("-----------------------\n");
-    printf("Escolha uma opção:\n");
-    printf("1. Cadastrar\n");
-    printf("2. Atendimento\n");
-    printf("3. Pesquisar\n");
-    printf("4. Desfazer\n");
-    printf("5. Carregar / Salvar\n");
-    printf("6. Sobre\n");
-    printf("0. Sair\n");
-    printf("-----------------------\n");
-    printf("Digite sua escolha: ");
+    menu();
     scanf("%d", &escolha);
 
+    // Processar escolha
     switch (escolha) {
-    case 1: {
       int subEscolha;
+
+    case 1:
       do {
-        printf("-----------------------\n");
-        printf("Menu de Cadastro:\n");
-        printf("1. Cadastrar novo paciente\n");
-        printf("2. Consultar paciente\n");
-        printf("3. Mostrar lista completa\n");
-        printf("4. Atualizar dados de paciente\n");
-        printf("5. Remover paciente\n");
-        printf("0. Voltar\n");
-        printf("-----------------------\n");
-        printf("Digite sua escolha: ");
+        print_cadatrar();
         scanf("%d", &subEscolha);
 
         switch (subEscolha) {
-        case 1: {
+        case 1:
           printf("Nome: ");
           clearBuffer();
           fgets(nome, sizeof(nome), stdin);
@@ -319,6 +370,7 @@ int main() {
           printf("Idade: ");
           scanf("%d", &idade);
           clearBuffer();
+
           printf("RG: ");
           fgets(RG, sizeof(RG), stdin);
 
@@ -337,73 +389,143 @@ int main() {
           inserir(lista, nome, idade, RG, entrada);
           printf("Paciente cadastrado com sucesso!\n");
           break;
-        }
-        case 2: {
+
+        case 2:
+          printf("Consultar cadastro \n");
           printf("Digite o RG do paciente: ");
           clearBuffer();
           fgets(RG, sizeof(RG), stdin);
           procurar(lista, RG);
           break;
-        }
+
         case 3:
           mostrar(lista);
           break;
-        case 4: {
+
+        case 4:
           printf("Digite o RG do paciente para atualizar: ");
           clearBuffer();
           fgets(RG, sizeof(RG), stdin);
           atualizar(lista, RG);
-
           break;
-        }
-        case 5: {
+
+        case 5:
           printf("Digite o RG do paciente para remover: ");
           clearBuffer();
           fgets(RG, sizeof(RG), stdin);
           remover(lista, RG);
+          break;
 
-          break;
-        }
         case 0:
+          printf("Saindo...\n");
           break;
+
         default:
-          printf("Opção inválida!\n");
+          printf("Opção inválida\n");
           break;
         }
       } while (subEscolha != 0);
       break;
-    }
+
     case 2:
-      printf("Atendimento: \n");
+      do {
+        
+        print_atendimento();
+        scanf("%d", &subEscolha);
+
+        switch (subEscolha) {
+        case 1:
+          printf("Enfileirar paciente:\n");
+          printf("Nome: ");
+          clearBuffer();
+          fgets(nome, sizeof(nome), stdin);
+          printf("Idade: ");
+          scanf("%d", &idade);
+          clearBuffer();
+          printf("RG: ");
+          fgets(RG, sizeof(RG), stdin);
+          printf("Dia de entrada: ");
+          scanf("%d", &dia);
+          printf("Mês de entrada: ");
+          scanf("%d", &mes);
+          printf("Ano de entrada: ");
+          scanf("%d", &ano);
+          Data *entrada = malloc(sizeof(Data));
+          entrada->dia = dia;
+          entrada->mes = mes;
+          entrada->ano = ano;
+          
+          enfileirar(nome, idade, RG, entrada, fila);
+          
+          break;
+
+        case 2:
+          printf("Desinfileirar paciente \n");
+          desinfeirar(fila);
+          break;
+
+        case 3:
+          printf("Mostrar fila\n");
+          mostrar_fila(fila);
+          break;
+
+        case 0:
+          printf("Saindo...\n");
+          break;
+
+        default:
+          printf("Opção inválida\n");
+        }
+      } while (subEscolha != 0);
       break;
+
     case 3:
-      printf("Pesquisar: \n");
+      do {
+        print_pesquisa();
+        scanf("%d", &subEscolha);
+
+        switch (subEscolha) {
+        case 1:
+          printf("Mostrar registros ordenados por ano:\n");
+          break;
+
+        case 2:
+          printf("Mostrar registros ordenados por mes:\n");
+          break;
+
+        case 3:
+          printf("Mostrar registros ordenados por dia:\n");
+          break;
+
+        case 4:
+          printf("Mostrar registros ordenados por idade:\n");
+          break;
+
+        case 0:
+          break;
+
+        default:
+          printf("Opção inválida\n");
+          break;
+        }
+      } while (subEscolha != 0);
       break;
+
     case 4:
       printf("Desfazer: \n");
       break;
+
     case 5:
       printf("Carregar / Salvar:\n");
       break;
+
     case 6:
-      printf("Sobre: \n");
-      printf("--------------------------------------------\n");
-      printf("Desenvolvedores:\n");
-      printf("Nome: Paulo Andre de Oliveira Hirata\n");
-      printf("Ciclo: Quarto ciclo\n");
-      printf("Curso: Ciencia da computacao\n");
-      printf("Disciplina: Estrutura de dados\n");
-      printf("----------------\n");
-      printf("Nome: Victor Merker Binda\n");
-      printf("Ciclo: Quarto ciclo\n");
-      printf("Curso: Ciencia da computacao\n");
-      printf("Disciplina: Estrutura de dados\n");
-      printf("--------------------------------------------\n");
-      printf("Data: 08/11/2024\n");
+      print_Sobre();
       break;
+
     case 0:
-      printf("Saindo...\n");
       break;
+
     default:
       printf("Opção inválida! Tente novamente.\n");
     }
