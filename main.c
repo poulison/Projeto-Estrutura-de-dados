@@ -629,24 +629,22 @@ int main() {
           clearBuffer();
           fgets(RG, sizeof(RG), stdin);
           Cadastro *inserido = lista->primeiro;
-          while (inserido != NULL) {
-            if (strcmp(inserido->dados->RG, RG) == 0) {
-              inserido->dados->nome = nome;
-              inserido->dados->RG = RG;
-              inserido->dados->idade = idade;
-              Data *entrada = malloc(sizeof(Data));
-              entrada->dia = inserido->dados->entrada->dia;
-              entrada->mes = inserido->dados->entrada->mes;
-              entrada->ano = inserido->dados->entrada->ano;
+          int found = 0; 
 
-              enfileirar(nome, idade, RG, entrada, fila);
-              printf("Paciente inserido na fila com sucesso!\n");
-            } else {
-              printf("RG não encontrado\n");
-            }
-            inserido = inserido->proximo;
+          while (inserido != NULL) {
+              if (strcmp(inserido->dados->RG, RG) == 0) {
+                  
+                  enfileirar(inserido->dados->nome, inserido->dados->idade, inserido->dados->RG, inserido->dados->entrada, fila);
+                  printf("Paciente inserido na fila com sucesso!\n");
+                  found = 1; 
+                  break; 
+              }
+              inserido = inserido->proximo;
           }
 
+          if (!found) {
+              printf("RG não encontrado\n");
+          }
           break;
 
         case 2:
