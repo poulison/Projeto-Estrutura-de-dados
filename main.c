@@ -572,6 +572,8 @@ int main() {
 
           inserir(lista, nome, idade, RG, entrada);
           printf("Paciente cadastrado com sucesso!\n");
+
+          
           inserir_todos_na_arvore(lista, arvoredia, inserir_arvore_dia);
           inserir_todos_na_arvore(lista, arvoremes, inserir_arvore_mes);
           inserir_todos_na_arvore(lista, arvoreano, inserir_arvore_ano);
@@ -597,6 +599,10 @@ int main() {
           fgets(RG, sizeof(RG), stdin);
 
           atualizar(lista, RG);
+          inserir_todos_na_arvore(lista, arvoredia, inserir_arvore_dia);
+          inserir_todos_na_arvore(lista, arvoremes, inserir_arvore_mes);
+          inserir_todos_na_arvore(lista, arvoreano, inserir_arvore_ano);
+          inserir_todos_na_arvore(lista, arvoreidade, inserir_arvore_idade);
           break;
 
         case 5:
@@ -604,6 +610,10 @@ int main() {
           clearBuffer();
           fgets(RG, sizeof(RG), stdin);
           remover(lista, RG);
+          inserir_todos_na_arvore(lista, arvoredia, inserir_arvore_dia);
+          inserir_todos_na_arvore(lista, arvoremes, inserir_arvore_mes);
+          inserir_todos_na_arvore(lista, arvoreano, inserir_arvore_ano);
+          inserir_todos_na_arvore(lista, arvoreidade, inserir_arvore_idade);
           break;
 
         case 0:
@@ -629,21 +639,22 @@ int main() {
           clearBuffer();
           fgets(RG, sizeof(RG), stdin);
           Cadastro *inserido = lista->primeiro;
-          int found = 0; 
+          int found = 0;
 
           while (inserido != NULL) {
-              if (strcmp(inserido->dados->RG, RG) == 0) {
-                  
-                  enfileirar(inserido->dados->nome, inserido->dados->idade, inserido->dados->RG, inserido->dados->entrada, fila);
-                  printf("Paciente inserido na fila com sucesso!\n");
-                  found = 1; 
-                  break; 
-              }
-              inserido = inserido->proximo;
+            if (strcmp(inserido->dados->RG, RG) == 0) {
+
+              enfileirar(inserido->dados->nome, inserido->dados->idade,
+                         inserido->dados->RG, inserido->dados->entrada, fila);
+              printf("Paciente inserido na fila com sucesso!\n");
+              found = 1;
+              break;
+            }
+            inserido = inserido->proximo;
           }
 
           if (!found) {
-              printf("RG não encontrado\n");
+            printf("RG não encontrado\n");
           }
           break;
 
