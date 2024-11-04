@@ -39,10 +39,46 @@ typedef struct {
   int qtd;
 } Fila;
 
+typedef struct Vertice {
+  Dados *dados;
+  struct Vertice *esq;
+  struct Vertice *dir;
+  struct Vertice *pai;
+} Vertice;
+
+typedef struct Arvore {
+  Vertice *raiz;
+  int qtde;
+} Arvore;
+
 void clearBuffer() {
   char c;
   while ((c = getchar()) != '\n' && c != EOF)
     ;
+}
+
+Vertice *cria_vertice(char *nome, int idade, char *RG, Data *entrada) {
+  Vertice *vertice = malloc(sizeof(Vertice));
+  vertice->dir = NULL;
+  vertice->esq = NULL;
+  vertice->pai = NULL;
+  vertice->dados = malloc(sizeof(Dados));
+  vertice->dados->nome = malloc(strlen(nome) + 1);
+  strcpy(vertice->dados->nome, nome);
+  vertice->dados->idade = idade;
+  vertice->dados->RG = malloc(strlen(RG) + 1);
+  strcpy(vertice->dados->RG, RG);
+  vertice->dados->entrada = entrada;
+
+  return vertice;
+}
+
+Arvore *cria_arvore() {
+  Arvore *arvore = malloc(sizeof(Arvore));
+  arvore->raiz = NULL;
+  arvore->qtde = 0;
+
+  return arvore;
 }
 
 ListaCad *criar_listaCad() {
@@ -72,6 +108,152 @@ CFila *criar_cfila(char *nome, int idade, char *RG, Data *entrada) {
   cfila->dados->entrada = entrada;
 
   return cfila;
+}
+void in_ordem(Vertice *raiz) {
+  if (raiz != NULL) {
+    in_ordem(raiz->esq);
+    printf("Nome: %s, Idade: %d, RG: %s, Data de Entrada: %02d/%02d/%d\n",
+           raiz->dados->nome, raiz->dados->idade, raiz->dados->RG,
+           raiz->dados->entrada->dia, raiz->dados->entrada->mes,
+           raiz->dados->entrada->ano);
+    in_ordem(raiz->dir);
+  }
+}
+
+void inserir_arvore_dia(Vertice **raiz, char *nome, int idade, char *RG,
+                        Data *entrada) {
+  Vertice *novo = cria_vertice(nome, idade, RG, entrada);
+
+  if (*raiz == NULL) {
+    *raiz = novo;
+    return;
+  }
+
+  Vertice *atual = *raiz;
+  Vertice *antes = NULL;
+
+  while (atual != NULL) {
+    antes = atual;
+    if (entrada->dia < atual->dados->entrada->dia) {
+      atual = atual->esq;
+    } else {
+      atual = atual->dir;
+    }
+  }
+
+  novo->pai = antes;
+  if (entrada->dia < antes->dados->entrada->dia) {
+    antes->esq = novo;
+  } else {
+    antes->dir = novo;
+  }
+}
+void inserir_arvore_mes(Vertice **raiz, char *nome, int idade, char *RG,
+                        Data *entrada) {
+  Vertice *novo = cria_vertice(nome, idade, RG, entrada);
+
+  if (*raiz == NULL) {
+    *raiz = novo;
+    return;
+  }
+
+  Vertice *atual = *raiz;
+  Vertice *antes = NULL;
+
+  while (atual != NULL) {
+    antes = atual;
+    if (entrada->mes < atual->dados->entrada->mes) {
+      atual = atual->esq;
+    } else {
+      atual = atual->dir;
+    }
+  }
+
+  novo->pai = antes;
+  if (entrada->mes < antes->dados->entrada->mes) {
+    antes->esq = novo;
+  } else {
+    antes->dir = novo;
+  }
+}
+void inserir_arvore_ano(Vertice **raiz, char *nome, int idade, char *RG,
+                        Data *entrada) {
+  Vertice *novo = cria_vertice(nome, idade, RG, entrada);
+
+  if (*raiz == NULL) {
+    *raiz = novo;
+    return;
+  }
+
+  Vertice *atual = *raiz;
+  Vertice *antes = NULL;
+
+  while (atual != NULL) {
+    antes = atual;
+    if (entrada->ano < atual->dados->entrada->ano) {
+      atual = atual->esq;
+    } else {
+      atual = atual->dir;
+    }
+  }
+
+  novo->pai = antes;
+  if (entrada->ano < antes->dados->entrada->ano) {
+    antes->esq = novo;
+  } else {
+    antes->dir = novo;
+  }
+}
+void inserir_arvore_idade(Vertice **raiz, char *nome, int idade, char *RG,
+                          Data *entrada) {
+  Vertice *novo = cria_vertice(nome, idade, RG, entrada);
+
+  if (*raiz == NULL) {
+    *raiz = novo;
+    return;
+  }
+
+  Vertice *atual = *raiz;
+  Vertice *antes = NULL;
+
+  while (atual != NULL) {
+    antes = atual;
+    if (idade < atual->dados->idade) {
+      atual = atual->esq;
+    } else {
+      atual = atual->dir;
+    }
+  }
+
+  novo->pai = antes;
+  if (idade < antes->dados->idade) {
+    antes->esq = novo;
+  } else {
+    antes->dir = novo;
+  }
+}
+
+void liberar_arvore(Vertice *vertice) {
+  if (vertice != NULL) {
+    liberar_arvore(vertice->esq);
+    liberar_arvore(vertice->dir);
+    free(vertice);
+  }
+}
+void inserir_todos_na_arvore(ListaCad *lista, Arvore *arvore,
+                             void tipo_arvore()) {
+  Cadastro *atual = lista->primeiro;
+
+  liberar_arvore(arvore->raiz);
+  arvore->raiz = NULL;
+
+  while (atual != NULL) {
+
+    tipo_arvore(&(arvore->raiz), atual->dados->nome, atual->dados->idade,
+                atual->dados->RG, atual->dados->entrada);
+    atual = atual->proximo;
+  }
+  arvore->qtde = lista->qtde;
 }
 
 Cadastro *criar_cadastro(char *nome, int idade, char *RG, Data *entrada) {
@@ -129,10 +311,10 @@ int desinfeirar(Fila *fila) {
 void mostrar(ListaCad *lista) {
   Cadastro *atual = lista->primeiro;
   while (atual != NULL) {
-    printf("Nome: %s", atual->dados->nome);
+    printf("Nome: %s\n", atual->dados->nome);
     printf("Data de Entrada: %02d/%02d/%d\n", atual->dados->entrada->dia,
            atual->dados->entrada->mes, atual->dados->entrada->ano);
-    printf("RG: %s", atual->dados->RG);
+    printf("RG: %s\n", atual->dados->RG);
     printf("Idade: %d\n", atual->dados->idade);
     printf("-----------------------\n");
     atual = atual->proximo;
@@ -176,7 +358,7 @@ void atualizar(ListaCad *lista, char *RG) {
         char novoNome[100];
         printf("Digite o novo nome: ");
         fgets(novoNome, sizeof(novoNome), stdin);
-        novoNome[strcspn(novoNome, "\n")] = 0;
+
         free(atual->dados->nome);
         atual->dados->nome = malloc(strlen(novoNome) + 1);
         strcpy(atual->dados->nome, novoNome);
@@ -187,7 +369,7 @@ void atualizar(ListaCad *lista, char *RG) {
         char novoRG[20];
         printf("Digite o novo RG: ");
         fgets(novoRG, sizeof(novoRG), stdin);
-        novoRG[strcspn(novoRG, "\n")] = 0;
+
         free(atual->dados->RG);
         atual->dados->RG = malloc(strlen(novoRG) + 1);
         strcpy(atual->dados->RG, novoRG);
@@ -198,7 +380,6 @@ void atualizar(ListaCad *lista, char *RG) {
         int novodia, novomes, novoano;
         printf("Digite a nova data de entrada (dd/mm/aaaa): ");
         scanf("%d/%d/%d", &novodia, &novomes, &novoano);
-        free(atual->dados->entrada);
         atual->dados->entrada = malloc(sizeof(Data));
         atual->dados->entrada->dia = novodia;
         atual->dados->entrada->mes = novomes;
@@ -347,12 +528,15 @@ int main() {
   char nome[50], RG[20];
   int idade, dia, mes, ano;
   Fila *fila = criar_fila();
+  Arvore *arvoredia = cria_arvore();
+  Arvore *arvoremes = cria_arvore();
+  Arvore *arvoreano = cria_arvore();
+  Arvore *arvoreidade = cria_arvore();
 
   do {
     menu();
     scanf("%d", &escolha);
 
-    // Processar escolha
     switch (escolha) {
       int subEscolha;
 
@@ -388,6 +572,10 @@ int main() {
 
           inserir(lista, nome, idade, RG, entrada);
           printf("Paciente cadastrado com sucesso!\n");
+          inserir_todos_na_arvore(lista, arvoredia, inserir_arvore_dia);
+          inserir_todos_na_arvore(lista, arvoremes, inserir_arvore_mes);
+          inserir_todos_na_arvore(lista, arvoreano, inserir_arvore_ano);
+          inserir_todos_na_arvore(lista, arvoreidade, inserir_arvore_idade);
           break;
 
         case 2:
@@ -395,6 +583,7 @@ int main() {
           printf("Digite o RG do paciente: ");
           clearBuffer();
           fgets(RG, sizeof(RG), stdin);
+
           procurar(lista, RG);
           break;
 
@@ -406,6 +595,7 @@ int main() {
           printf("Digite o RG do paciente para atualizar: ");
           clearBuffer();
           fgets(RG, sizeof(RG), stdin);
+
           atualizar(lista, RG);
           break;
 
@@ -429,34 +619,34 @@ int main() {
 
     case 2:
       do {
-        
+
         print_atendimento();
         scanf("%d", &subEscolha);
 
         switch (subEscolha) {
         case 1:
-          printf("Enfileirar paciente:\n");
-          printf("Nome: ");
+          printf("Digite o RG do usuario para inseri-lo na fila: ");
           clearBuffer();
-          fgets(nome, sizeof(nome), stdin);
-          printf("Idade: ");
-          scanf("%d", &idade);
-          clearBuffer();
-          printf("RG: ");
           fgets(RG, sizeof(RG), stdin);
-          printf("Dia de entrada: ");
-          scanf("%d", &dia);
-          printf("Mês de entrada: ");
-          scanf("%d", &mes);
-          printf("Ano de entrada: ");
-          scanf("%d", &ano);
-          Data *entrada = malloc(sizeof(Data));
-          entrada->dia = dia;
-          entrada->mes = mes;
-          entrada->ano = ano;
-          
-          enfileirar(nome, idade, RG, entrada, fila);
-          
+          Cadastro *inserido = lista->primeiro;
+          while (inserido != NULL) {
+            if (strcmp(inserido->dados->RG, RG) == 0) {
+              inserido->dados->nome = nome;
+              inserido->dados->RG = RG;
+              inserido->dados->idade = idade;
+              Data *entrada = malloc(sizeof(Data));
+              entrada->dia = inserido->dados->entrada->dia;
+              entrada->mes = inserido->dados->entrada->mes;
+              entrada->ano = inserido->dados->entrada->ano;
+
+              enfileirar(nome, idade, RG, entrada, fila);
+              printf("Paciente inserido na fila com sucesso!\n");
+            } else {
+              printf("RG não encontrado\n");
+            }
+            inserido = inserido->proximo;
+          }
+
           break;
 
         case 2:
@@ -487,18 +677,22 @@ int main() {
         switch (subEscolha) {
         case 1:
           printf("Mostrar registros ordenados por ano:\n");
+          in_ordem(arvoreano->raiz);
           break;
 
         case 2:
           printf("Mostrar registros ordenados por mes:\n");
+          in_ordem(arvoremes->raiz);
           break;
 
         case 3:
           printf("Mostrar registros ordenados por dia:\n");
+          in_ordem(arvoredia->raiz);
           break;
 
         case 4:
           printf("Mostrar registros ordenados por idade:\n");
+          in_ordem(arvoreidade->raiz);
           break;
 
         case 0:
