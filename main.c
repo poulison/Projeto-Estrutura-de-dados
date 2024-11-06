@@ -44,12 +44,6 @@ typedef struct OpFila {
   CFila *cfila;  // Dados do paciente (se necessário)
 } OpFila;
 
-typedef struct Celula {
-  OpFila op;  // Operação realizada
-  struct Celula *anterior;
-  struct Celula *proximo;
-} Celula;
-
 typedef struct {
 Celula *topo;
 int qtde;
@@ -131,32 +125,6 @@ Stack *stack = malloc(sizeof(Stack));
 stack->qtde = 0;
 stack->topo = NULL;
 return stack;
-}
-
-
-int pop(Stack *pilha){
-  if(pilha->qtde == 0){
-    return -1;
-  }
-  int valor = pilha->topo->valor;
-  Celula *temp = pilha->topo;
-  pilha->topo = pilha->topo->anterior;
-  if(pilha->qtde > 1){
-    pilha->topo->proximo = NULL;
-  }
-  free(temp);
-  pilha->qtde--;
-  return valor;
-}
-
-void registraOp(Stack *pilha, int operacao, CFila *cfila){
-  if(pilha->qtde == 0){
-    return;
-  }
-  Celula *celula = malloc(sizeof(Celula));
-  
-
-
 }
 
 void in_ordem(Vertice *raiz) {
@@ -328,6 +296,7 @@ void *enfileirar(char *nome, int idade, char *RG, Data *entrada, Fila *fila) {
     fila->tail->proximo = novo;
     novo->anterior = fila->tail;
   }
+  operacao = 1;
   fila->tail = novo;
   fila->qtd++;
 }
@@ -356,6 +325,7 @@ int desinfeirar(Fila *fila) {
     free(temp);
     return fila;
   }
+  operacao = 2;
   return -1;
 }
 
@@ -389,6 +359,49 @@ void procurar(ListaCad *lista, char *RG) {
     atual = atual->proximo;
   }
   printf("Paciente não encontrado.\n");
+}
+
+
+int pop(Stack *pilha){
+  if(pilha->qtde == 0){
+    return -1;
+  }
+  int valor = pilha->topo->valor;
+  Celula *temp = pilha->topo;
+  pilha->topo = pilha->topo->anterior;
+  if(pilha->qtde > 1){
+    pilha->topo->proximo = NULL;
+  }
+  free(temp);
+  pilha->qtde--;
+  return valor;
+}
+
+void registraOp(Stack *pilha, CFila *cfila){
+  if(pilha->qtde == 0){
+    return;
+  }
+    // Desfaz a operação
+    if (op->operacao == 1) {
+        // Desfazer enfileiramento (remove o último enfileirado)
+        if (cfila->qtd > 0) {
+          char RG = cfila->head->dados->RG;
+          Fila *temp = cfila->head;
+          cfila->head = fila->head->proximo;
+          if (cfila->qtd == 1) {
+            cfila->tail = NULL;
+          } else {
+            cfila->head->anterior = NULL;
+          }
+        cfila->qtd--;
+        free(temp);
+        return cfila
+      } 
+    } else if (op->operacao == 2) {
+        
+    }
+
+    free(op);
 }
 
 void atualizar(ListaCad *lista, char *RG) {
