@@ -1,4 +1,5 @@
 
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -39,16 +40,6 @@ typedef struct {
   int qtd;
 } Fila;
 
-typedef struct OpFila {
-  int operacao;  // 1 para enfileirar, 2 para desinfeirar
-  CFila *cfila;  // Dados do paciente (se necessário)
-} OpFila;
-
-typedef struct {
-Celula *topo;
-int qtde;
-} Stack;
-
 typedef struct Vertice {
   Dados *dados;
   struct Vertice *esq;
@@ -58,8 +49,53 @@ typedef struct Vertice {
 
 typedef struct Arvore {
   Vertice *raiz;
-  int Pqtde;
+  int qtde;
 } Arvore;
+
+typedef struct Celula {
+  struct Celula *anterior;
+  char *RG; // armazena o rg do usuario pra procura na lista dps
+  struct Celula *proximo;
+  int qop; // se o valor da operação for 0=usuario foi removiso da fila
+           // 1=adicionado a fila
+} Celula;
+
+typedef struct {
+  Celula *topo;
+  int qtde;
+} Stack;
+
+Celula *cria_celula(Dados *dados) {
+  Celula *celula = malloc(sizeof(Celula));
+  celula->anterior = NULL;
+  celula->proximo = NULL;
+  celula->RG = NULL;
+  celula->qop = 2;
+  return celula;
+}
+
+Stack *criar_stack() {
+  Stack *stack = malloc(sizeof(Stack));
+  stack->qtde = 0;
+  stack->topo = NULL;
+  return stack;
+}
+
+void push(Stack *pilha, char *RG, int qop) {
+  Celula *nova_celula = malloc(sizeof(Celula));
+  nova_celula->RG = malloc(strlen(RG) + 1);
+  strcpy(nova_celula->RG, RG);
+  nova_celula->qop = qop; // 1 significa enfileirar
+  nova_celula->proximo = pilha->topo;
+  nova_celula->anterior = NULL;
+
+  if (pilha->topo != NULL) {
+    pilha->topo->anterior = nova_celula;
+  }
+
+  pilha->topo = nova_celula;
+  pilha->qtde++;
+}
 
 void clearBuffer() {
   char c;
@@ -119,14 +155,6 @@ CFila *criar_cfila(char *nome, int idade, char *RG, Data *entrada) {
 
   return cfila;
 }
-
-Stack *criar_stack(){
-Stack *stack = malloc(sizeof(Stack));
-stack->qtde = 0;
-stack->topo = NULL;
-return stack;
-}
-
 void in_ordem(Vertice *raiz) {
   if (raiz != NULL) {
     in_ordem(raiz->esq);
@@ -251,6 +279,42 @@ void inserir_arvore_idade(Vertice **raiz, char *nome, int idade, char *RG,
   }
 }
 
+void enfileirar_no_inicio(char *nome, int idade, char *RG, Data *entrada, Fila *fila) {
+  CFila *novo = criar_cfila(nome, idade, RG, entrada);
+  if (fila->qtd == 0) {
+    fila->head = novo;
+    fila->tail = novo;
+  } else {
+    novo->proximo = fila->head;
+    fila->head->anterior = novo;
+    fila->head = novo;
+  }
+  fila->qtd++;
+}
+
+int desinfileirar_do_inicio(Fila *fila) {
+  if (fila->qtd > 0) {
+    CFila *temp = fila->head;
+    fila->head = fila->head->proximo;
+
+    if (fila->qtd == 1) {
+      fila->tail = NULL;
+    } else {
+      fila->head->anterior = NULL;
+    }
+
+    free(temp->dados->nome);
+    free(temp->dados->RG);
+    free(temp->dados->entrada);
+    free(temp->dados);
+    free(temp);
+
+    fila->qtd--;
+    return 1; // Sucesso
+  }
+  return 0; // Falha: fila vazia
+}
+
 void liberar_arvore(Vertice *vertice) {
   if (vertice != NULL) {
     liberar_arvore(vertice->esq);
@@ -288,7 +352,7 @@ Cadastro *criar_cadastro(char *nome, int idade, char *RG, Data *entrada) {
   return cadastro;
 }
 
-void *enfileirar(char *nome, int idade, char *RG, Data *entrada, Fila *fila) {
+void *enfileirar(Stack *stack,char *nome, int idade, char *RG, Data *entrada, Fila *fila) {
   CFila *novo = criar_cfila(nome, idade, RG, entrada);
   if (fila->qtd == 0) {
     fila->head = novo;
@@ -296,9 +360,10 @@ void *enfileirar(char *nome, int idade, char *RG, Data *entrada, Fila *fila) {
     fila->tail->proximo = novo;
     novo->anterior = fila->tail;
   }
-  operacao = 1;
+  push(stack,RG,1);
   fila->tail = novo;
   fila->qtd++;
+
 }
 
 void mostrar_fila(Fila *fila) {
@@ -310,39 +375,55 @@ void mostrar_fila(Fila *fila) {
   }
   printf("Total na fila: %d\n", fila->qtd);
 }
+int desinfeirar(Stack *stack,Fila *fila) {
 
-int desinfeirar(Fila *fila) {
   if (fila->qtd > 0) {
-    char RG = fila->head->dados->RG;
-    Fila *temp = fila->head;
+    CFila *temp = fila->head;
+    char *rg=fila->head->dados->RG;
     fila->head = fila->head->proximo;
+
     if (fila->qtd == 1) {
       fila->tail = NULL;
     } else {
       fila->head->anterior = NULL;
     }
+
+    push(stack,rg,0);
     fila->qtd--;
     free(temp);
-    return fila;
+    return 1; // Sucesso
   }
-  operacao = 2;
-  return -1;
+  return 0; // Falha: fila vazia
 }
 
 void mostrar(ListaCad *lista) {
   Cadastro *atual = lista->primeiro;
   while (atual != NULL) {
     printf("Nome: %s\n", atual->dados->nome);
-    printf("Data de Entrada: %02d/%02d/%d\n", atual->dados->entrada->dia,
+    printf("Data de Entrada: %02d/%02d/%d \n", atual->dados->entrada->dia,
            atual->dados->entrada->mes, atual->dados->entrada->ano);
-    printf("RG: %s\n", atual->dados->RG);
-    printf("Idade: %d\n", atual->dados->idade);
+    printf("RG: %s \n", atual->dados->RG);
+    printf("Idade: %d \n", atual->dados->idade);
     printf("-----------------------\n");
     atual = atual->proximo;
   }
   printf("\n");
 }
 
+char pop(Stack *pilha) {
+  char *rg = pilha->topo->RG;
+  Celula *temp = pilha->topo;
+  pilha->topo = pilha->topo->anterior;
+  free(temp);
+  pilha->qtde--;
+
+  // Garantir que 'topo' não seja acessado se a pilha estiver vazia
+  if (pilha->topo != NULL) {
+    pilha->topo->proximo = NULL;
+  }
+
+  return *rg;
+}
 void procurar(ListaCad *lista, char *RG) {
   Cadastro *atual = lista->primeiro;
   while (atual != NULL) {
@@ -361,47 +442,40 @@ void procurar(ListaCad *lista, char *RG) {
   printf("Paciente não encontrado.\n");
 }
 
-
-int pop(Stack *pilha){
-  if(pilha->qtde == 0){
-    return -1;
-  }
-  int valor = pilha->topo->valor;
-  Celula *temp = pilha->topo;
-  pilha->topo = pilha->topo->anterior;
-  if(pilha->qtde > 1){
-    pilha->topo->proximo = NULL;
-  }
-  free(temp);
-  pilha->qtde--;
-  return valor;
-}
-
-void registraOp(Stack *pilha, CFila *cfila){
-  if(pilha->qtde == 0){
+void desfazer(Stack *pilha, ListaCad *lista, Fila *fila) {
+  if (pilha->topo == NULL) {
+    printf("Não há operações para desfazer.\n");
     return;
   }
-    // Desfaz a operação
-    if (op->operacao == 1) {
-        // Desfazer enfileiramento (remove o último enfileirado)
-        if (cfila->qtd > 0) {
-          char RG = cfila->head->dados->RG;
-          Fila *temp = cfila->head;
-          cfila->head = fila->head->proximo;
-          if (cfila->qtd == 1) {
-            cfila->tail = NULL;
-          } else {
-            cfila->head->anterior = NULL;
-          }
-        cfila->qtd--;
-        free(temp);
-        return cfila
-      } 
-    } else if (op->operacao == 2) {
-        
-    }
 
-    free(op);
+
+  Celula *ultimo = pilha->topo;
+  Cadastro *cadastro = lista->primeiro;
+  char *nome = NULL;
+  int idade = 0;
+  char *RG = NULL;
+  Data *entrada = NULL;
+
+
+  while (cadastro != NULL) {
+    if (strcmp(cadastro->dados->RG, ultimo->RG) == 0) {
+      nome = cadastro->dados->nome;
+      idade = cadastro->dados->idade;
+      RG = cadastro->dados->RG;
+      entrada = cadastro->dados->entrada;
+      break;
+    }
+    cadastro = cadastro->proximo;
+  }
+
+  if (ultimo->qop == 0) { 
+    enfileirar_no_inicio(nome, idade, RG, entrada, fila);
+  } else if (ultimo->qop == 1) { 
+    desinfileirar_do_inicio(fila);
+  }
+
+
+  pop(pilha);
 }
 
 void atualizar(ListaCad *lista, char *RG) {
@@ -596,6 +670,7 @@ int main() {
   Arvore *arvoremes = cria_arvore();
   Arvore *arvoreano = cria_arvore();
   Arvore *arvoreidade = cria_arvore();
+  Stack *stack = criar_stack();
 
   do {
     menu();
@@ -637,7 +712,6 @@ int main() {
           inserir(lista, nome, idade, RG, entrada);
           printf("Paciente cadastrado com sucesso!\n");
 
-          
           inserir_todos_na_arvore(lista, arvoredia, inserir_arvore_dia);
           inserir_todos_na_arvore(lista, arvoremes, inserir_arvore_mes);
           inserir_todos_na_arvore(lista, arvoreano, inserir_arvore_ano);
@@ -708,7 +782,7 @@ int main() {
           while (inserido != NULL) {
             if (strcmp(inserido->dados->RG, RG) == 0) {
 
-              enfileirar(inserido->dados->nome, inserido->dados->idade,
+              enfileirar(stack,inserido->dados->nome, inserido->dados->idade,
                          inserido->dados->RG, inserido->dados->entrada, fila);
               printf("Paciente inserido na fila com sucesso!\n");
               found = 1;
@@ -724,7 +798,8 @@ int main() {
 
         case 2:
           printf("Desinfileirar paciente \n");
-          desinfeirar(fila);
+          desinfeirar(stack,fila);
+          
           break;
 
         case 3:
@@ -769,6 +844,7 @@ int main() {
           break;
 
         case 0:
+          printf("Sair \n");
           break;
 
         default:
@@ -779,7 +855,9 @@ int main() {
       break;
 
     case 4:
-      printf("Desfazer\n");
+      printf("Desfazer: \n");
+      desfazer(stack, lista , fila);
+      printf("Ultima operação desfeita com sucesso!\n");
       break;
 
     case 5:
