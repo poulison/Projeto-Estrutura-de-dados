@@ -593,6 +593,85 @@ void inserir(ListaCad *lista, char *nome, int idade, char *RG, Data *entrada) {
   }
 }
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Função para salvar cadastros em um arquivo
+void salvar_cadastros(ListaCad *lista) {
+    FILE *arquivo = fopen("cadastros.txt", "ab");
+    if (arquivo == NULL) {
+        printf("Erro ao abrir o arquivo para escrita.\n");
+        return;
+    }
+
+    Cadastro *atual = lista->primeiro;
+    while (atual != NULL) {
+        // Salvar o tamanho da string do nome e o nome
+        int tamanho_nome = strlen(atual->dados->nome) + 1;
+        fwrite(&tamanho_nome, sizeof(int), 1, arquivo);
+        fwrite(atual->dados->nome, sizeof(char), tamanho_nome, arquivo);
+
+        // Salvar a idade
+        fwrite(&atual->dados->idade, sizeof(int), 1, arquivo);
+
+        // Salvar o tamanho da string do RG e o RG
+        int tamanho_RG = strlen(atual->dados->RG) + 1;
+        fwrite(&tamanho_RG, sizeof(int), 1, arquivo);
+        fwrite(atual->dados->RG, sizeof(char), tamanho_RG, arquivo);
+
+        // Salvar a data de entrada
+        fwrite(atual->dados->entrada, sizeof(Data), 1, arquivo);
+
+        atual = atual->proximo;
+    }
+
+    fclose(arquivo);
+    printf("Cadastros salvos com sucesso!\n");
+}
+
+// Função para carregar cadastros de um arquivo
+void carregar_cadastros(ListaCad *lista) {
+    FILE *arquivo = fopen("cadastros.txt", "rb");
+    if (arquivo == NULL) {
+        printf("Erro ao abrir o arquivo para leitura.\n");
+        return;
+    }
+
+    while (!feof(arquivo)) {
+        int tamanho_nome, tamanho_RG;
+        Dados *dados = malloc(sizeof(Dados));
+
+        // Carregar o tamanho e o nome
+        fread(&tamanho_nome, sizeof(int), 1, arquivo);
+        dados->nome = malloc(tamanho_nome);
+        fread(dados->nome, sizeof(char), tamanho_nome, arquivo);
+
+        // Carregar a idade
+        fread(&dados->idade, sizeof(int), 1, arquivo);
+
+        // Carregar o tamanho e o RG
+        fread(&tamanho_RG, sizeof(int), 1, arquivo);
+        dados->RG = malloc(tamanho_RG);
+        fread(dados->RG, sizeof(char), tamanho_RG, arquivo);
+
+        // Carregar a data de entrada
+        dados->entrada = malloc(sizeof(Data));
+        fread(dados->entrada, sizeof(Data), 1, arquivo);
+
+        // Criar um novo cadastro com os dados lidos e adicionar à lista
+        Cadastro *novo = malloc(sizeof(Cadastro));
+        novo->dados = dados;
+        novo->proximo = lista->primeiro;
+        lista->primeiro = novo;
+        lista->qtde++;
+    }
+
+    fclose(arquivo);
+    printf("Cadastros carregados com sucesso!\n");
+}
+
+
 void menu() {
   printf("-----------------------\n");
   printf("Escolha uma opção:\n");
@@ -861,7 +940,33 @@ int main() {
       break;
 
     case 5:
-      printf("Carregar / Salvar:\n");
+      do {
+        printf("Carregar / Salvar:\n");
+        printf("1. Carregar\n");
+        printf("2. Salvar\n");
+        printf("0. Sair\n");
+        scanf("%d", &subEscolha);
+
+        switch (subEscolha) {
+        case 1:
+          printf("Carregando cadastros\n");
+          carregar_cadastros(lista);
+          break;
+
+        case 2:
+          printf("Salvando cadastros:\n");
+          salvar_cadastros(lista);
+          break;
+
+        case 0:
+          printf("Sair \n");
+          break;
+
+        default:
+          printf("Opção inválida\n");
+          break;
+        }
+      } while (subEscolha != 0);
       break;
 
     case 6:
