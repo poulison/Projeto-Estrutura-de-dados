@@ -447,7 +447,7 @@ void desfazer(Stack *pilha, ListaCad *lista, Fila *fila) {
     return;
   }
 
-  // Recuperar a última operação
+  
   Celula *ultimo = pilha->topo;
   Cadastro *cadastro = lista->primeiro;
   char *nome = NULL;
@@ -455,7 +455,7 @@ void desfazer(Stack *pilha, ListaCad *lista, Fila *fila) {
   char *RG = NULL;
   Data *entrada = NULL;
 
-  // Encontrar o cadastro correspondente ao RG
+  
   while (cadastro != NULL) {
     if (strcmp(cadastro->dados->RG, ultimo->RG) == 0) {
       nome = cadastro->dados->nome;
