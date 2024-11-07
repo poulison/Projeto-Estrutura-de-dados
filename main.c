@@ -279,7 +279,8 @@ void inserir_arvore_idade(Vertice **raiz, char *nome, int idade, char *RG,
   }
 }
 
-void enfileirar_no_inicio(char *nome, int idade, char *RG, Data *entrada, Fila *fila) {
+void enfileirar_no_inicio(char *nome, int idade, char *RG, Data *entrada,
+                          Fila *fila) {
   CFila *novo = criar_cfila(nome, idade, RG, entrada);
   if (fila->qtd == 0) {
     fila->head = novo;
@@ -352,7 +353,8 @@ Cadastro *criar_cadastro(char *nome, int idade, char *RG, Data *entrada) {
   return cadastro;
 }
 
-void *enfileirar(Stack *stack,char *nome, int idade, char *RG, Data *entrada, Fila *fila) {
+void *enfileirar(Stack *stack, char *nome, int idade, char *RG, Data *entrada,
+                 Fila *fila) {
   CFila *novo = criar_cfila(nome, idade, RG, entrada);
   if (fila->qtd == 0) {
     fila->head = novo;
@@ -360,10 +362,9 @@ void *enfileirar(Stack *stack,char *nome, int idade, char *RG, Data *entrada, Fi
     fila->tail->proximo = novo;
     novo->anterior = fila->tail;
   }
-  push(stack,RG,1);
+  push(stack, RG, 1);
   fila->tail = novo;
   fila->qtd++;
-
 }
 
 void mostrar_fila(Fila *fila) {
@@ -375,11 +376,11 @@ void mostrar_fila(Fila *fila) {
   }
   printf("Total na fila: %d\n", fila->qtd);
 }
-int desinfeirar(Stack *stack,Fila *fila) {
+int desinfeirar(Stack *stack, Fila *fila) {
 
   if (fila->qtd > 0) {
     CFila *temp = fila->head;
-    char *rg=fila->head->dados->RG;
+    char *rg = fila->head->dados->RG;
     fila->head = fila->head->proximo;
 
     if (fila->qtd == 1) {
@@ -388,7 +389,7 @@ int desinfeirar(Stack *stack,Fila *fila) {
       fila->head->anterior = NULL;
     }
 
-    push(stack,rg,0);
+    push(stack, rg, 0);
     fila->qtd--;
     free(temp);
     return 1; // Sucesso
@@ -448,14 +449,12 @@ void desfazer(Stack *pilha, ListaCad *lista, Fila *fila) {
     return;
   }
 
-
   Celula *ultimo = pilha->topo;
   Cadastro *cadastro = lista->primeiro;
   char *nome = NULL;
   int idade = 0;
   char *RG = NULL;
   Data *entrada = NULL;
-
 
   while (cadastro != NULL) {
     if (strcmp(cadastro->dados->RG, ultimo->RG) == 0) {
@@ -468,12 +467,11 @@ void desfazer(Stack *pilha, ListaCad *lista, Fila *fila) {
     cadastro = cadastro->proximo;
   }
 
-  if (ultimo->qop == 0) { 
+  if (ultimo->qop == 0) {
     enfileirar_no_inicio(nome, idade, RG, entrada, fila);
-  } else if (ultimo->qop == 1) { 
+  } else if (ultimo->qop == 1) {
     desinfileirar_do_inicio(fila);
   }
-
 
   pop(pilha);
 }
@@ -593,84 +591,110 @@ void inserir(ListaCad *lista, char *nome, int idade, char *RG, Data *entrada) {
   }
 }
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+void salvarDados(ListaCad *lista, Fila *fila, const char *nomeArquivo) {
+  FILE *arquivo = fopen(nomeArquivo, "w");
+  if (!arquivo) {
+    printf("Erro ao abrir o arquivo para salvar.\n");
+    return;
+  }
 
-// Função para salvar cadastros em um arquivo
-void salvar_cadastros(ListaCad *lista) {
-    FILE *arquivo = fopen("cadastros.txt", "ab");
-    if (arquivo == NULL) {
-        printf("Erro ao abrir o arquivo para escrita.\n");
-        return;
-    }
+  // Salvando pacientes cadastrados
+  Cadastro *atualCad = lista->primeiro;
+  fprintf(arquivo, "Pacientes Cadastrados:\n");
+  while (atualCad != NULL) {
+    fprintf(arquivo, "Nome: %s\n", atualCad->dados->nome);
+    fprintf(arquivo, "Idade: %d\n", atualCad->dados->idade);
+    fprintf(arquivo, "RG: %s\n", atualCad->dados->RG);
+    fprintf(arquivo, "Data de Entrada: %02d/%02d/%04d\n",
+            atualCad->dados->entrada->dia, atualCad->dados->entrada->mes,
+            atualCad->dados->entrada->ano);
+    fprintf(arquivo, "-----------------------\n");
+    atualCad = atualCad->proximo;
+  }
 
-    Cadastro *atual = lista->primeiro;
-    while (atual != NULL) {
-        // Salvar o tamanho da string do nome e o nome
-        int tamanho_nome = strlen(atual->dados->nome) + 1;
-        fwrite(&tamanho_nome, sizeof(int), 1, arquivo);
-        fwrite(atual->dados->nome, sizeof(char), tamanho_nome, arquivo);
+  // Salvando pacientes na fila de espera
+  CFila *atualFila = fila->head;
+  fprintf(arquivo, "\nPacientes na Fila de Espera:\n");
+  while (atualFila != NULL) {
+    fprintf(arquivo, "Nome: %s\n", atualFila->dados->nome);
+    fprintf(arquivo, "Idade: %d\n", atualFila->dados->idade);
+    fprintf(arquivo, "RG: %s\n", atualFila->dados->RG);
+    fprintf(arquivo, "Data de Entrada: %02d/%02d/%04d\n",
+            atualFila->dados->entrada->dia, atualFila->dados->entrada->mes,
+            atualFila->dados->entrada->ano);
+    fprintf(arquivo, "-----------------------\n");
+    atualFila = atualFila->proximo;
+  }
 
-        // Salvar a idade
-        fwrite(&atual->dados->idade, sizeof(int), 1, arquivo);
-
-        // Salvar o tamanho da string do RG e o RG
-        int tamanho_RG = strlen(atual->dados->RG) + 1;
-        fwrite(&tamanho_RG, sizeof(int), 1, arquivo);
-        fwrite(atual->dados->RG, sizeof(char), tamanho_RG, arquivo);
-
-        // Salvar a data de entrada
-        fwrite(atual->dados->entrada, sizeof(Data), 1, arquivo);
-
-        atual = atual->proximo;
-    }
-
-    fclose(arquivo);
-    printf("Cadastros salvos com sucesso!\n");
+  fclose(arquivo);
+  printf("Dados salvos com sucesso em %s.\n", nomeArquivo);
 }
 
-// Função para carregar cadastros de um arquivo
-void carregar_cadastros(ListaCad *lista) {
-    FILE *arquivo = fopen("cadastros.txt", "rb");
-    if (arquivo == NULL) {
-        printf("Erro ao abrir o arquivo para leitura.\n");
-        return;
-    }
+void carregarDados(ListaCad *lista, Fila *fila, const char *nomeArquivo) {
+  FILE *arquivo = fopen(nomeArquivo, "r");
+  if (!arquivo) {
+    printf(
+        "Arquivo de dados não encontrado. Iniciando sem dados anteriores.\n");
+    return;
+  }
 
-    while (!feof(arquivo)) {
-        int tamanho_nome, tamanho_RG;
-        Dados *dados = malloc(sizeof(Dados));
+  char linha[256];
+  Dados *dados = NULL;
+  int carregandoLista = 1; // 1 para lista de cadastrados, 0 para fila de espera
 
-        // Carregar o tamanho e o nome
-        fread(&tamanho_nome, sizeof(int), 1, arquivo);
-        dados->nome = malloc(tamanho_nome);
-        fread(dados->nome, sizeof(char), tamanho_nome, arquivo);
+  while (fgets(linha, sizeof(linha), arquivo)) {
+    if (strstr(linha, "Pacientes Cadastrados:")) {
+      carregandoLista = 1;
+    } else if (strstr(linha, "Pacientes na Fila de Espera:")) {
+      carregandoLista = 0;
+    } else if (strstr(linha, "Nome: ")) {
+      dados = malloc(sizeof(Dados));
+      dados->nome = strdup(linha + 6);
+      dados->nome[strcspn(dados->nome, "\n")] = 0; // Remover a nova linha
+    } else if (strstr(linha, "Idade: ")) {
+      sscanf(linha + 7, "%d", &dados->idade);
+    } else if (strstr(linha, "RG: ")) {
+      dados->RG = strdup(linha + 4);
+      dados->RG[strcspn(dados->RG, "\n")] = 0;
+    } else if (strstr(linha, "Data de Entrada: ")) {
+      dados->entrada = malloc(sizeof(Data));
+      sscanf(linha + 17, "%d/%d/%d", &dados->entrada->dia, &dados->entrada->mes,
+             &dados->entrada->ano);
 
-        // Carregar a idade
-        fread(&dados->idade, sizeof(int), 1, arquivo);
-
-        // Carregar o tamanho e o RG
-        fread(&tamanho_RG, sizeof(int), 1, arquivo);
-        dados->RG = malloc(tamanho_RG);
-        fread(dados->RG, sizeof(char), tamanho_RG, arquivo);
-
-        // Carregar a data de entrada
-        dados->entrada = malloc(sizeof(Data));
-        fread(dados->entrada, sizeof(Data), 1, arquivo);
-
-        // Criar um novo cadastro com os dados lidos e adicionar à lista
-        Cadastro *novo = malloc(sizeof(Cadastro));
-        novo->dados = dados;
-        novo->proximo = lista->primeiro;
-        lista->primeiro = novo;
+      // Adicionando dados na lista ou fila
+      if (carregandoLista) {
+        Cadastro *novoCad = criar_cadastro(dados->nome, dados->idade, dados->RG,
+                                           dados->entrada);
+        novoCad->proximo = lista->primeiro;
+        lista->primeiro = novoCad;
         lista->qtde++;
+      } else {
+        CFila *novoFila =
+            criar_cfila(dados->nome, dados->idade, dados->RG, dados->entrada);
+        if (fila->qtd == 0) {
+          fila->head = novoFila;
+          fila->tail = novoFila;
+        } else {
+          fila->tail->proximo = novoFila;
+          novoFila->anterior = fila->tail;
+          fila->tail = novoFila;
+        }
+        fila->qtd++;
+      }
     }
+  }
 
-    fclose(arquivo);
-    printf("Cadastros carregados com sucesso!\n");
+  fclose(arquivo);
+  printf("Dados carregados com sucesso de %s.\n", nomeArquivo);
 }
 
+void opcaoSalvar(ListaCad *lista, Fila *fila) {
+  salvarDados(lista, fila, "dados_pacientes.txt");
+}
+
+void opcaoCarregar(ListaCad *lista, Fila *fila) {
+  carregarDados(lista, fila, "dados_pacientes.txt");
+}
 
 void menu() {
   printf("-----------------------\n");
@@ -861,7 +885,7 @@ int main() {
           while (inserido != NULL) {
             if (strcmp(inserido->dados->RG, RG) == 0) {
 
-              enfileirar(stack,inserido->dados->nome, inserido->dados->idade,
+              enfileirar(stack, inserido->dados->nome, inserido->dados->idade,
                          inserido->dados->RG, inserido->dados->entrada, fila);
               printf("Paciente inserido na fila com sucesso!\n");
               found = 1;
@@ -877,8 +901,8 @@ int main() {
 
         case 2:
           printf("Desinfileirar paciente \n");
-          desinfeirar(stack,fila);
-          
+          desinfeirar(stack, fila);
+
           break;
 
         case 3:
@@ -935,7 +959,7 @@ int main() {
 
     case 4:
       printf("Desfazer: \n");
-      desfazer(stack, lista , fila);
+      desfazer(stack, lista, fila);
       printf("Ultima operação desfeita com sucesso!\n");
       break;
 
@@ -950,12 +974,12 @@ int main() {
         switch (subEscolha) {
         case 1:
           printf("Carregando cadastros\n");
-          carregar_cadastros(lista);
+          opcaoCarregar(lista, fila);
           break;
 
         case 2:
           printf("Salvando cadastros:\n");
-          salvar_cadastros(lista);
+          opcaoSalvar(lista, fila);
           break;
 
         case 0:
