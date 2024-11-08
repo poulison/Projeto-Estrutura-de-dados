@@ -4,52 +4,59 @@
 #include <stdlib.h>
 #include <string.h>
 
+// Estrutura que representa uma data com dia, mês e ano
 typedef struct {
-  int dia;
-  int mes;
-  int ano;
+  int dia;  
+  int mes;  
+  int ano;  
 } Data;
 
+// Estrutura que representa os dados de uma pessoa
 typedef struct Dados {
-  int idade;
-  char *nome;
-  char *RG;
-  Data *entrada;
+  int idade;       
+  char *nome;      
+  char *RG;        
+  Data *entrada;  
 } Dados;
 
+// Estrutura para representar um cadastro, que pode apontar para o próximo cadastro
 typedef struct Cadastro {
-  struct Cadastro *proximo;
-  Dados *dados;
+  struct Cadastro *proximo; 
+  Dados *dados;             
 } Cadastro;
 
+// Estrutura que representa uma lista de cadastros
 typedef struct {
-  Cadastro *primeiro;
-  int qtde;
+  Cadastro *primeiro; 
+  int qtde;           
 } ListaCad;
 
+// Estrutura para representar um nó em uma fila
 typedef struct {
-  Dados *dados;
-  struct CFila *anterior;
-  struct CFila *proximo;
-
+  Dados *dados;                 
+  struct CFila *anterior;       
+  struct CFila *proximo;        
 } CFila;
 
+// Estrutura que representa uma fila
 typedef struct {
-  CFila *head;
-  CFila *tail;
-  int qtd;
+  CFila *head; 
+  CFila *tail; 
+  int qtd;     
 } Fila;
 
+// Estrutura que representa um vértice em uma árvore binária
 typedef struct Vertice {
-  Dados *dados;
-  struct Vertice *esq;
-  struct Vertice *dir;
-  struct Vertice *pai;
+  Dados *dados;               
+  struct Vertice *esq;        
+  struct Vertice *dir;        
+  struct Vertice *pai;        
 } Vertice;
 
+// Estrutura que representa uma árvore binária
 typedef struct Arvore {
-  Vertice *raiz;
-  int qtde;
+  Vertice *raiz; 
+  int qtde;      
 } Arvore;
 
 typedef struct Celula {
@@ -60,11 +67,13 @@ typedef struct Celula {
            // 1=adicionado a fila
 } Celula;
 
-typedef struct {
+//Estrutura para uma pilha
+typedef struct { 
   Celula *topo;
   int qtde;
 } Stack;
 
+//cria a celula 
 Celula *cria_celula(Dados *dados) {
   Celula *celula = malloc(sizeof(Celula));
   celula->anterior = NULL;
@@ -73,7 +82,7 @@ Celula *cria_celula(Dados *dados) {
   celula->qop = 2;
   return celula;
 }
-
+//Cria a pilha para a funcao desfazer
 Stack *criar_stack() {
   Stack *stack = malloc(sizeof(Stack));
   stack->qtde = 0;
@@ -81,6 +90,7 @@ Stack *criar_stack() {
   return stack;
 }
 
+//funcao para inserir a celula na pilha
 void push(Stack *pilha, char *RG, int qop) {
   Celula *nova_celula = malloc(sizeof(Celula));
   nova_celula->RG = malloc(strlen(RG) + 1);
@@ -97,12 +107,14 @@ void push(Stack *pilha, char *RG, int qop) {
   pilha->qtde++;
 }
 
+//funcao para limpar o buffer do teclado
 void clearBuffer() {
   char c;
   while ((c = getchar()) != '\n' && c != EOF)
     ;
 }
 
+//funcao para criar os vertices para a arvore
 Vertice *cria_vertice(char *nome, int idade, char *RG, Data *entrada) {
   Vertice *vertice = malloc(sizeof(Vertice));
   vertice->dir = NULL;
@@ -119,6 +131,7 @@ Vertice *cria_vertice(char *nome, int idade, char *RG, Data *entrada) {
   return vertice;
 }
 
+//cria a arvore
 Arvore *cria_arvore() {
   Arvore *arvore = malloc(sizeof(Arvore));
   arvore->raiz = NULL;
@@ -127,6 +140,7 @@ Arvore *cria_arvore() {
   return arvore;
 }
 
+//cria a lista de cadastros
 ListaCad *criar_listaCad() {
   ListaCad *lista = malloc(sizeof(ListaCad));
   lista->primeiro = NULL;
@@ -134,6 +148,7 @@ ListaCad *criar_listaCad() {
   return lista;
 }
 
+//cria a fila para os pacientes
 void *criar_fila() {
   Fila *fila = malloc(sizeof(Fila));
   fila->head = NULL;
@@ -141,6 +156,8 @@ void *criar_fila() {
   fila->qtd = 0;
   return fila;
 }
+
+//cria lista
 CFila *criar_cfila(char *nome, int idade, char *RG, Data *entrada) {
   CFila *cfila = malloc(sizeof(CFila));
   cfila->anterior = NULL;
@@ -155,6 +172,7 @@ CFila *criar_cfila(char *nome, int idade, char *RG, Data *entrada) {
 
   return cfila;
 }
+//funcao para printar na ordem desejada as informacoes do usuario
 void in_ordem(Vertice *raiz) {
   if (raiz != NULL) {
     in_ordem(raiz->esq);
@@ -165,12 +183,12 @@ void in_ordem(Vertice *raiz) {
     in_ordem(raiz->dir);
   }
 }
-
+// Função para inserir um vértice na árvore com base no dia de entrada
 void inserir_arvore_dia(Vertice **raiz, char *nome, int idade, char *RG,
                         Data *entrada) {
-  Vertice *novo = cria_vertice(nome, idade, RG, entrada);
+  Vertice *novo = cria_vertice(nome, idade, RG, entrada);  // Cria um novo vértice com os dados
 
-  if (*raiz == NULL) {
+  if (*raiz == NULL) { // Se a árvore estiver vazia, o novo vértice se torna a raiz
     *raiz = novo;
     return;
   }
@@ -178,27 +196,29 @@ void inserir_arvore_dia(Vertice **raiz, char *nome, int idade, char *RG,
   Vertice *atual = *raiz;
   Vertice *antes = NULL;
 
-  while (atual != NULL) {
+  while (atual != NULL) { // Percorre a árvore para encontrar a posição correta
     antes = atual;
     if (entrada->dia < atual->dados->entrada->dia) {
-      atual = atual->esq;
-    } else {
-      atual = atual->dir;
+      atual = atual->esq; // Vai para a subárvore esquerda se o dia for menor
+    } else { 
+      atual = atual->dir; // Vai para a subárvore direita se o dia for maior ou igual
     }
   }
 
-  novo->pai = antes;
+  novo->pai = antes; // Define o pai do novo nó
   if (entrada->dia < antes->dados->entrada->dia) {
-    antes->esq = novo;
+    antes->esq = novo; // Insere à esquerda se o dia for menor
   } else {
-    antes->dir = novo;
+    antes->dir = novo; // Insere à direita se o dia for maior ou igual
   }
 }
+
+// Função para inserir um vértice na árvore com base no mês de entrada
 void inserir_arvore_mes(Vertice **raiz, char *nome, int idade, char *RG,
                         Data *entrada) {
-  Vertice *novo = cria_vertice(nome, idade, RG, entrada);
+  Vertice *novo = cria_vertice(nome, idade, RG, entrada); // Cria um novo vértice
 
-  if (*raiz == NULL) {
+  if (*raiz == NULL) { // Se a árvore estiver vazia
     *raiz = novo;
     return;
   }
@@ -206,27 +226,29 @@ void inserir_arvore_mes(Vertice **raiz, char *nome, int idade, char *RG,
   Vertice *atual = *raiz;
   Vertice *antes = NULL;
 
-  while (atual != NULL) {
+  while (atual != NULL) { // Busca a posição correta para o novo nó
     antes = atual;
     if (entrada->mes < atual->dados->entrada->mes) {
-      atual = atual->esq;
+      atual = atual->esq; // Vai para a esquerda se o mês for menor
     } else {
-      atual = atual->dir;
+      atual = atual->dir; // Vai para a direita se o mês for maior ou igual
     }
   }
 
-  novo->pai = antes;
+  novo->pai = antes; // Define o pai do novo nó
   if (entrada->mes < antes->dados->entrada->mes) {
     antes->esq = novo;
   } else {
     antes->dir = novo;
   }
 }
+
+// Função para inserir um vértice na árvore com base no ano de entrada
 void inserir_arvore_ano(Vertice **raiz, char *nome, int idade, char *RG,
                         Data *entrada) {
-  Vertice *novo = cria_vertice(nome, idade, RG, entrada);
+  Vertice *novo = cria_vertice(nome, idade, RG, entrada); // Cria um novo vértice
 
-  if (*raiz == NULL) {
+  if (*raiz == NULL) { // Se a árvore estiver vazia
     *raiz = novo;
     return;
   }
@@ -234,7 +256,7 @@ void inserir_arvore_ano(Vertice **raiz, char *nome, int idade, char *RG,
   Vertice *atual = *raiz;
   Vertice *antes = NULL;
 
-  while (atual != NULL) {
+  while (atual != NULL) { // Busca a posição correta para o novo nó
     antes = atual;
     if (entrada->ano < atual->dados->entrada->ano) {
       atual = atual->esq;
@@ -250,6 +272,7 @@ void inserir_arvore_ano(Vertice **raiz, char *nome, int idade, char *RG,
     antes->dir = novo;
   }
 }
+// Função para inserir um vértice na árvore com base na idade
 void inserir_arvore_idade(Vertice **raiz, char *nome, int idade, char *RG,
                           Data *entrada) {
   Vertice *novo = cria_vertice(nome, idade, RG, entrada);
@@ -279,10 +302,11 @@ void inserir_arvore_idade(Vertice **raiz, char *nome, int idade, char *RG,
   }
 }
 
+// Função para enfileirar um elemento no início da fila
 void enfileirar_no_inicio(char *nome, int idade, char *RG, Data *entrada,
                           Fila *fila) {
   CFila *novo = criar_cfila(nome, idade, RG, entrada);
-  if (fila->qtd == 0) {
+  if (fila->qtd == 0) { // Se a fila estiver vazia
     fila->head = novo;
     fila->tail = novo;
   } else {
@@ -293,6 +317,7 @@ void enfileirar_no_inicio(char *nome, int idade, char *RG, Data *entrada,
   fila->qtd++;
 }
 
+// Função para desenfileirar do início da fila
 int desinfileirar_do_inicio(Fila *fila) {
   if (fila->qtd > 0) {
     CFila *temp = fila->head;
@@ -303,7 +328,8 @@ int desinfileirar_do_inicio(Fila *fila) {
     } else {
       fila->head->anterior = NULL;
     }
-
+    
+    // Libera a memória do nó removido
     free(temp->dados->nome);
     free(temp->dados->RG);
     free(temp->dados->entrada);
@@ -316,18 +342,20 @@ int desinfileirar_do_inicio(Fila *fila) {
   return 0; // Falha: fila vazia
 }
 
+// Função para liberar a memória de todos os vértices da árvore
 void liberar_arvore(Vertice *vertice) {
   if (vertice != NULL) {
-    liberar_arvore(vertice->esq);
-    liberar_arvore(vertice->dir);
-    free(vertice);
+    liberar_arvore(vertice->esq);// Libera a subárvore esquerda
+    liberar_arvore(vertice->dir);// Libera a subárvore direita
+    free(vertice); //libera o vertice atual
   }
 }
+// Função para inserir todos os cadastros da lista na árvore
 void inserir_todos_na_arvore(ListaCad *lista, Arvore *arvore,
                              void tipo_arvore()) {
   Cadastro *atual = lista->primeiro;
 
-  liberar_arvore(arvore->raiz);
+  liberar_arvore(arvore->raiz); // Libera a árvore antes de inserir os novos elementos
   arvore->raiz = NULL;
 
   while (atual != NULL) {
@@ -336,14 +364,15 @@ void inserir_todos_na_arvore(ListaCad *lista, Arvore *arvore,
                 atual->dados->RG, atual->dados->entrada);
     atual = atual->proximo;
   }
-  arvore->qtde = lista->qtde;
+  arvore->qtde = lista->qtde; // Atualiza a quantidade de elementos na árvore
 }
 
+// Função para criar um novo cadastro com os dados fornecidos
 Cadastro *criar_cadastro(char *nome, int idade, char *RG, Data *entrada) {
-  Cadastro *cadastro = malloc(sizeof(Cadastro));
-  cadastro->proximo = NULL;
-  cadastro->dados = malloc(sizeof(Dados));
-  cadastro->dados->nome = malloc(strlen(nome) + 1);
+  Cadastro *cadastro = malloc(sizeof(Cadastro)); // Aloca memória para o cadastro
+  cadastro->proximo = NULL;   // Define o próximo como NULL para o final da lista
+  cadastro->dados = malloc(sizeof(Dados)); // Aloca memória para os dados do cadastro
+  cadastro->dados->nome = malloc(strlen(nome) + 1);  // Aloca memória para o nome e copia o valor fornecido
   strcpy(cadastro->dados->nome, nome);
   cadastro->dados->idade = idade;
   cadastro->dados->RG = malloc(strlen(RG) + 1);
@@ -353,43 +382,47 @@ Cadastro *criar_cadastro(char *nome, int idade, char *RG, Data *entrada) {
   return cadastro;
 }
 
+// Função para enfileirar um novo elemento na fila
 void *enfileirar(Stack *stack, char *nome, int idade, char *RG, Data *entrada,
-                 Fila *fila) {
+                 Fila *fila) { // Cria um novo nó de fila
   CFila *novo = criar_cfila(nome, idade, RG, entrada);
-  if (fila->qtd == 0) {
+  if (fila->qtd == 0) { // Se a fila está vazia, define o novo nó como a cabeça
     fila->head = novo;
   } else {
     fila->tail->proximo = novo;
     novo->anterior = fila->tail;
   }
-  push(stack, RG, 1);
+  push(stack, RG, 1); // Empilha o RG com um código de ação (1) na pilha auxiliar
   fila->tail = novo;
   fila->qtd++;
 }
 
+// Função para exibir todos os elementos da fila
 void mostrar_fila(Fila *fila) {
   CFila *atual = fila->head;
-  while (atual != NULL) {
+  while (atual != NULL) { // Percorre a fila do início ao fim, imprimindo os dados
     printf("Nome: %s, Idade: %d, RG: %s\n", atual->dados->nome,
            atual->dados->idade, atual->dados->RG);
     atual = atual->proximo;
   }
   printf("Total na fila: %d\n", fila->qtd);
 }
+
+// Função para remover um elemento do início da fila 
 int desinfeirar(Stack *stack, Fila *fila) {
 
   if (fila->qtd > 0) {
-    CFila *temp = fila->head;
-    char *rg = fila->head->dados->RG;
+    CFila *temp = fila->head; 
+    char *rg = fila->head->dados->RG; // Captura o RG do elemento removido
     fila->head = fila->head->proximo;
 
-    if (fila->qtd == 1) {
+    if (fila->qtd == 1) {  // Se era o único elemento, define o final como NULL
       fila->tail = NULL;
     } else {
-      fila->head->anterior = NULL;
+      fila->head->anterior = NULL;  // Ajusta o ponteiro anterior do novo primeiro nó
     }
 
-    push(stack, rg, 0);
+    push(stack, rg, 0); // Empilha o RG na pilha com código de remoção (0)
     fila->qtd--;
     free(temp);
     return 1; // Sucesso
@@ -397,10 +430,11 @@ int desinfeirar(Stack *stack, Fila *fila) {
   return 0; // Falha: fila vazia
 }
 
+// Função para exibir todos os cadastros em uma lista
 void mostrar(ListaCad *lista) {
   Cadastro *atual = lista->primeiro;
   while (atual != NULL) {
-    printf("\n");
+    printf("\n"); // Percorre a lista e imprime os dados de cada cadastro
     printf("Nome: %s\n", atual->dados->nome);
     printf("Data de Entrada: %02d/%02d/%d\n", atual->dados->entrada->dia,
            atual->dados->entrada->mes, atual->dados->entrada->ano);
@@ -412,12 +446,14 @@ void mostrar(ListaCad *lista) {
   }
   printf("\n");
 }
+
+// Função para remover o topo da pilha e retornar o RG do elemento removido
 char pop(Stack *pilha) {
   char *rg = pilha->topo->RG;
-  Celula *temp = pilha->topo;
-  pilha->topo = pilha->topo->anterior;
-  free(temp);
-  pilha->qtde--;
+  Celula *temp = pilha->topo; // Guarda o elemento do topo para liberar
+  pilha->topo = pilha->topo->anterior; // Move o topo para o próximo elemento
+  free(temp); // Libera a memória do elemento removido
+  pilha->qtde--; // Decrementa a quantidade de elementos na pilha
 
   // Garantir que 'topo' não seja acessado se a pilha estiver vazia
   if (pilha->topo != NULL) {
@@ -426,11 +462,13 @@ char pop(Stack *pilha) {
 
   return *rg;
 }
+
+// Função para procurar um cadastro pelo RG na lista
 void procurar(ListaCad *lista, char *RG) {
   Cadastro *atual = lista->primeiro;
-  while (atual != NULL) {
-    if (strcmp(atual->dados->RG, RG) == 0) {
-      printf("-----------------------\n");
+  while (atual != NULL) { // Percorre a lista de cadastros
+    if (strcmp(atual->dados->RG, RG) == 0) { // Verifica se o RG corresponde
+      printf("-----------------------\n"); 
       printf("Nome: %s\n", atual->dados->nome);
       printf("Data de Entrada: %02d/%02d/%d\n", atual->dados->entrada->dia,
              atual->dados->entrada->mes, atual->dados->entrada->ano);
@@ -444,19 +482,21 @@ void procurar(ListaCad *lista, char *RG) {
   printf("Paciente não encontrado.\n");
 }
 
+// Função para desfazer a última operação, com base no conteúdo da pilha
 void desfazer(Stack *pilha, ListaCad *lista, Fila *fila) {
-  if (pilha->topo == NULL) {
+  if (pilha->topo == NULL) { // Verifica se há operações na pilha para desfazer
     printf("Não há operações para desfazer.\n");
     return;
-  }
+  } // Verificar se a pilha está vazia
 
-  Celula *ultimo = pilha->topo;
+  Celula *ultimo = pilha->topo; // Obtém o topo da pilha 
   Cadastro *cadastro = lista->primeiro;
   char *nome = NULL;
   int idade = 0;
   char *RG = NULL;
-  Data *entrada = NULL;
+  Data *entrada = NULL; 
 
+  
   while (cadastro != NULL) {
     if (strcmp(cadastro->dados->RG, ultimo->RG) == 0) {
       nome = cadastro->dados->nome;
@@ -468,18 +508,20 @@ void desfazer(Stack *pilha, ListaCad *lista, Fila *fila) {
     cadastro = cadastro->proximo;
   }
 
-  if (ultimo->qop == 0) {
+  // Realiza a operação de desfazer baseada no tipo de operação armazenado (qop)
+  if (ultimo->qop == 0) { // qop == 0 indica um desenfileiramento, então enfileira
     enfileirar_no_inicio(nome, idade, RG, entrada, fila);
-  } else if (ultimo->qop == 1) {
+  } else if (ultimo->qop == 1) { // qop == 1 indica um enfileiramento, então desenfileira
     desinfileirar_do_inicio(fila);
   }
 
-  pop(pilha);
+  pop(pilha); // Remove o topo da pilha após desfazer a operação
 }
 
+// Função para atualizar informações de um cadastro específico pelo RG
 void atualizar(ListaCad *lista, char *RG) {
   Cadastro *atual = lista->primeiro;
-  while (atual != NULL) {
+  while (atual != NULL) { // Percorre a lista de cadastros
     if (strcmp(atual->dados->RG, RG) == 0) {
       printf("-----------------------\n");
       printf("Escolha qual campo você deseja mudar\n");
@@ -488,10 +530,11 @@ void atualizar(ListaCad *lista, char *RG) {
       printf("3. Data de Entrada\n");
       printf("4. Idade\n");
       int escolha;
-      scanf("%d", &escolha);
+      scanf("%d", &escolha); // Recebe a escolha do campo a ser atualizado
       clearBuffer();
+      // Switch para modificar o campo escolhido pelo usuário
       switch (escolha) {
-      case 1: {
+      case 1: { // Atualiza o nome
         char novoNome[100];
         printf("Digite o novo nome: ");
         fgets(novoNome, sizeof(novoNome), stdin);
@@ -502,7 +545,7 @@ void atualizar(ListaCad *lista, char *RG) {
         printf("Nome atualizado com sucesso!\n");
         break;
       }
-      case 2: {
+      case 2: { // Atualiza o RG
         char novoRG[20];
         printf("Digite o novo RG: ");
         fgets(novoRG, sizeof(novoRG), stdin);
@@ -513,7 +556,7 @@ void atualizar(ListaCad *lista, char *RG) {
         printf("RG atualizado com sucesso!\n");
         break;
       }
-      case 3: {
+      case 3: { // Atualiza a data de entrada
         int novodia, novomes, novoano;
         printf("Digite a nova data de entrada (dd/mm/aaaa): ");
         scanf("%d/%d/%d", &novodia, &novomes, &novoano);
@@ -524,7 +567,7 @@ void atualizar(ListaCad *lista, char *RG) {
         printf("Data de entrada atualizada com sucesso!\n");
         break;
       }
-      case 4: {
+      case 4: { // Atualiza a idade
         int novaIdade;
         printf("Digite a nova idade: ");
         scanf("%d", &novaIdade);
@@ -542,6 +585,8 @@ void atualizar(ListaCad *lista, char *RG) {
   printf("Paciente não encontrado para atualização.\n");
 }
 
+
+//funcao para remover o cadastro de algum paciente
 void remover(ListaCad *lista, char *RG) {
   Cadastro *atual = lista->primeiro;
   Cadastro *anterior = NULL;
@@ -561,27 +606,28 @@ void remover(ListaCad *lista, char *RG) {
     free(atual->dados->RG);
     free(atual->dados->entrada);
     free(atual->dados);
-    free(atual);
+    free(atual);                 //da free nas variaveis
     lista->qtde--;
   } else {
     printf("Paciente não encontrado para remoção.\n");
   }
 }
 
+//funcao para inserir na lista
 void inserir(ListaCad *lista, char *nome, int idade, char *RG, Data *entrada) {
-  Cadastro *novo = criar_cadastro(nome, idade, RG, entrada);
-  Cadastro *atual = lista->primeiro;
-  Cadastro *anterior = NULL;
+  Cadastro *novo = criar_cadastro(nome, idade, RG, entrada);//cria um novo cadastro
+  Cadastro *atual = lista->primeiro;//cria um ponteiro atual para o primeiro cadastro da lista
+  Cadastro *anterior = NULL; //declara que o ponteiro anterior e nulo
 
-  if (lista->primeiro == NULL) {
-    lista->primeiro = novo;
+  if (lista->primeiro == NULL) { //se o primeiro for null
+    lista->primeiro = novo; //o novo cadastro sera o primeiro
     lista->qtde++;
   } else {
     while (atual != NULL && novo->dados->idade >= atual->dados->idade) {
-      anterior = atual;
+      anterior = atual; //enquanto o atual nao for nulo e o novo for maior que o atual, o atual sera o anterior 
       atual = atual->proximo;
     }
-    if (anterior == NULL) {
+    if (anterior == NULL) { 
       novo->proximo = lista->primeiro;
       lista->primeiro = novo;
     } else {
@@ -592,6 +638,7 @@ void inserir(ListaCad *lista, char *nome, int idade, char *RG, Data *entrada) {
   }
 }
 
+//print do menu principal
 void menu() {
   printf("-----------------------\n");
   printf("Escolha uma opção:\n");
@@ -607,6 +654,7 @@ void menu() {
   printf("Digite sua escolha: ");
 }
 
+//print do menu de cadastro
 void print_cadatrar() {
   printf("Cadastro: \n");
   printf("\n");
@@ -623,6 +671,7 @@ void print_cadatrar() {
   printf("Digite sua escolha: ");
 }
 
+//print do menu de atendimento
 void print_atendimento() {
   printf("Atendimento: \n");
   printf("\n");
@@ -637,6 +686,7 @@ void print_atendimento() {
   printf("Digite sua escolha: ");
 }
 
+//print da funcao sobre
 void print_Sobre() {
   printf("Sobre: \n");
   printf("--------------------------------------------\n");
@@ -654,6 +704,7 @@ void print_Sobre() {
   printf("Data: 08/11/2024");
 }
 
+//print do menu pesquisa
 void print_pesquisa() {
   printf("Pesquisar: \n");
   printf("------------------------------------------------\n");
@@ -662,16 +713,18 @@ void print_pesquisa() {
   printf("2. Registros ordenados por mes\n");
   printf("3. Registros ordenados por dia\n");
   printf("4. Registros ordenados por idade\n");
+  printf("0. Sair\n");
   printf("------------------------------------------------\n");
 }
+
+//Função para salvar os cadastros em um arquivo
 void salvarLista(ListaCad *lista) {
-  FILE *arquivo = fopen("lista_cadastros.txt", "w");
+  FILE *arquivo = fopen("lista_cadastros.txt", "w");//abre o arquivo para escrita
   if (arquivo == NULL) {
     printf("Erro ao abrir o arquivo para salvar.\n");
-    return;
+    return;//se o arquivo não abrir, retorna
   }
-
-  Cadastro *atual = lista->primeiro;
+  Cadastro *atual = lista->primeiro;//inicializa o ponteiro atual com o primeiro elemento da lista
   while (atual != NULL) {
     // Salvar os dados do cadastro no arquivo
     fprintf(arquivo, "%s;%d;%s;%d/%d/%d\n", atual->dados->nome,
@@ -682,17 +735,18 @@ void salvarLista(ListaCad *lista) {
 
   fclose(arquivo);
   printf("Lista salva com sucesso!\n");
+  //finaliza o processo de salvamento
 }
 
+//Função para carregar os cadastros de um arquivo para o codigo
 void carregarLista(ListaCad *lista) {
   FILE *arquivo = fopen("lista_cadastros.txt", "r");
   if (arquivo == NULL) {
     printf("Erro ao abrir o arquivo para carregar.\n");
-    return;
+    return;//se o arquivo nao existir retorna
   }
-
-  char nome[100], rg[20];
-  int idade, dia, mes, ano;
+  char nome[100], rg[20]; 
+  int idade, dia, mes, ano; //variaveis para armazenar os dados lidos do arquivo
   while (fscanf(arquivo, "%99[^;];%d;%19[^;];%d/%d/%d\n", nome, &idade, rg,
                 &dia, &mes, &ano) == 6) {
     // Alocar memória para os novos dados e cadastro
@@ -722,6 +776,8 @@ void carregarLista(ListaCad *lista) {
     novoCadastro->proximo = lista->primeiro;
     lista->primeiro = novoCadastro; // Inserção no início da lista
     lista->qtde++;                  // Aumenta a quantidade de cadastros
+
+    
   }
 
   fclose(arquivo);
@@ -729,7 +785,7 @@ void carregarLista(ListaCad *lista) {
 }
 
 int main() {
-  ListaCad *lista = criar_listaCad();
+  ListaCad *lista = criar_listaCad();//declarando as variaveis e chama funcoes necessarias nessa parte inicial da main
   int escolha;
   char nome[50], RG[20];
   int idade, dia, mes, ano;
@@ -740,21 +796,26 @@ int main() {
   Arvore *arvoreidade = cria_arvore();
   Stack *stack = criar_stack();
   carregarLista(lista);
+  inserir_todos_na_arvore(lista, arvoredia, inserir_arvore_dia);
+  inserir_todos_na_arvore(lista, arvoremes, inserir_arvore_mes);
+  inserir_todos_na_arvore(lista, arvoreano, inserir_arvore_ano);
+  inserir_todos_na_arvore(lista, arvoreidade, inserir_arvore_idade);//para inserir os dados do arquivo
+  //na arvore
 
   do {
     menu();
-    scanf("%d", &escolha);
+    scanf("%d", &escolha);//inicializa o switch case com o menu principal
 
     switch (escolha) {
       int subEscolha;
 
-    case 1:
+    case 1: // Menu e Submenu de cadastro
       do {
-        print_cadatrar();
+        print_cadatrar(); 
         scanf("%d", &subEscolha);
 
         switch (subEscolha) {
-        case 1:
+        case 1:  //Cadastro de um novo paciente
           printf("Nome: ");
           clearBuffer();
           fgets(nome, sizeof(nome), stdin);
@@ -771,37 +832,37 @@ int main() {
           printf("Mês de entrada: ");
           scanf("%d", &mes);
           printf("Ano de entrada: ");
-          scanf("%d", &ano);
+          scanf("%d", &ano);        //Resgatou os dados necessarios para o cadastro, informados pelo usuario
 
-          Data *entrada = malloc(sizeof(Data));
+          Data *entrada = malloc(sizeof(Data));    //aloca as datas inseridas pelo usuario
           entrada->dia = dia;
           entrada->mes = mes;
           entrada->ano = ano;
 
-          inserir(lista, nome, idade, RG, entrada);
+          inserir(lista, nome, idade, RG, entrada); //insere os dados na lista
           printf("Paciente cadastrado com sucesso!\n");
           printf("\n");
 
           inserir_todos_na_arvore(lista, arvoredia, inserir_arvore_dia);
           inserir_todos_na_arvore(lista, arvoremes, inserir_arvore_mes);
           inserir_todos_na_arvore(lista, arvoreano, inserir_arvore_ano);
-          inserir_todos_na_arvore(lista, arvoreidade, inserir_arvore_idade);
+          inserir_todos_na_arvore(lista, arvoreidade, inserir_arvore_idade); //insere os dados na arvore
           break;
 
-        case 2:
+        case 2: // caso de consultar um cadastro
           printf("Consultar cadastro \n");
           printf("Digite o RG do paciente: ");
           clearBuffer();
-          fgets(RG, sizeof(RG), stdin);
-
-          procurar(lista, RG);
+          fgets(RG, sizeof(RG), stdin); //pega o RG do paciente que deve ser buscado
+    
+          procurar(lista, RG); //procura o paciente
           break;
 
         case 3:
-          mostrar(lista);
+          mostrar(lista); //mostra todos os cadastros
           break;
 
-        case 4:
+        case 4: //caso para atualizar os dados de um cadastro
           printf("Digite o RG do paciente para atualizar: ");
           clearBuffer();
           fgets(RG, sizeof(RG), stdin);
@@ -810,19 +871,19 @@ int main() {
           inserir_todos_na_arvore(lista, arvoredia, inserir_arvore_dia);
           inserir_todos_na_arvore(lista, arvoremes, inserir_arvore_mes);
           inserir_todos_na_arvore(lista, arvoreano, inserir_arvore_ano);
-          inserir_todos_na_arvore(lista, arvoreidade, inserir_arvore_idade);
-          break;
+          inserir_todos_na_arvore(lista, arvoreidade, inserir_arvore_idade); 
+          break; // insere e atualiza os dados na arvore
 
-        case 5:
+        case 5: //caso para remover um cadastro
           printf("Digite o RG do paciente para remover: ");
           clearBuffer();
-          fgets(RG, sizeof(RG), stdin);
+          fgets(RG, sizeof(RG), stdin); //recebe o RG do paciente que deve ser removido
           remover(lista, RG);
           inserir_todos_na_arvore(lista, arvoredia, inserir_arvore_dia);
           inserir_todos_na_arvore(lista, arvoremes, inserir_arvore_mes);
           inserir_todos_na_arvore(lista, arvoreano, inserir_arvore_ano);
           inserir_todos_na_arvore(lista, arvoreidade, inserir_arvore_idade);
-          break;
+          break; //remove o paciente e atualiza a arvore
 
         case 0:
           printf("Saindo...\n");
@@ -835,25 +896,25 @@ int main() {
       } while (subEscolha != 0);
       break;
 
-    case 2:
+    case 2: //Menu de atendimento  e enfileiramento
       do {
 
         print_atendimento();
         scanf("%d", &subEscolha);
 
         switch (subEscolha) {
-        case 1:
+        case 1: //enfileirar um paciente
           printf("Digite o RG do usuario para inseri-lo na fila: ");
           clearBuffer();
           fgets(RG, sizeof(RG), stdin);
-          Cadastro *inserido = lista->primeiro;
+          Cadastro *inserido = lista->primeiro; 
           int found = 0;
 
           while (inserido != NULL) {
             if (strcmp(inserido->dados->RG, RG) == 0) {
 
               enfileirar(stack, inserido->dados->nome, inserido->dados->idade,
-                         inserido->dados->RG, inserido->dados->entrada, fila);
+                         inserido->dados->RG, inserido->dados->entrada, fila); //insere o paciente na fila
               printf("Paciente inserido na fila com sucesso!\n");
               found = 1;
               break;
@@ -862,17 +923,18 @@ int main() {
           }
 
           if (!found) {
-            printf("RG não encontrado\n");
+            printf("RG não encontrado\n"); //caso nao encontre o RG retorna
           }
           break;
 
-        case 2:
+        case 2: //tira um paciente da fila
           printf("Desinfileirar paciente \n");
           desinfeirar(stack, fila);
+          printf("Paciente desinfileirado com sucesso!\n");
 
           break;
 
-        case 3:
+        case 3://mostra a fila na situacao atual
           printf("Mostrar fila\n");
           mostrar_fila(fila);
           break;
@@ -888,28 +950,29 @@ int main() {
       break;
 
     case 3:
-      do {
+      do {//menu de pesquisa
         print_pesquisa();
         scanf("%d", &subEscolha);
 
         switch (subEscolha) {
         case 1:
-          printf("Mostrar registros ordenados por ano:\n");
+          printf("Mostrar registros ordenados por ano:\n"); //mostra os registros ordenados por ano
           in_ordem(arvoreano->raiz);
+          
           break;
 
         case 2:
-          printf("Mostrar registros ordenados por mes:\n");
+          printf("Mostrar registros ordenados por mes:\n"); //mostra os registros ordenados por mes
           in_ordem(arvoremes->raiz);
           break;
 
         case 3:
-          printf("Mostrar registros ordenados por dia:\n");
+          printf("Mostrar registros ordenados por dia:\n"); //mostra os registros ordenados por dia
           in_ordem(arvoredia->raiz);
           break;
 
         case 4:
-          printf("Mostrar registros ordenados por idade:\n");
+          printf("Mostrar registros ordenados por idade:\n"); //mostra os registros ordenados por idade
           in_ordem(arvoreidade->raiz);
           break;
 
@@ -924,18 +987,18 @@ int main() {
       break;
 
     case 4:
-      printf("Desfazer: \n");
+      printf("Desfazer: \n"); //desfaz a ultima operacao relacionada a filas
       desfazer(stack, lista, fila);
 
       break;
 
     case 5:
-      printf("Salvar:\n");
+      printf("Salvar:\n"); //caso para salvar os cadastros num arquivo
       salvarLista(lista);
       break;
 
     case 6:
-      print_Sobre();
+      print_Sobre(); //caso que mostra sobre os desenvolvedores do projeto
       break;
 
     case 0:
