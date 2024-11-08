@@ -400,17 +400,18 @@ int desinfeirar(Stack *stack, Fila *fila) {
 void mostrar(ListaCad *lista) {
   Cadastro *atual = lista->primeiro;
   while (atual != NULL) {
+    printf("\n");
     printf("Nome: %s\n", atual->dados->nome);
-    printf("Data de Entrada: %02d/%02d/%d \n", atual->dados->entrada->dia,
+    printf("Data de Entrada: %02d/%02d/%d\n", atual->dados->entrada->dia,
            atual->dados->entrada->mes, atual->dados->entrada->ano);
-    printf("RG: %s \n", atual->dados->RG);
-    printf("Idade: %d \n", atual->dados->idade);
+    printf("\n");
+    printf("RG: %s\n", atual->dados->RG);
+    printf("Idade: %d\n", atual->dados->idade);
     printf("-----------------------\n");
     atual = atual->proximo;
   }
   printf("\n");
 }
-
 char pop(Stack *pilha) {
   char *rg = pilha->topo->RG;
   Celula *temp = pilha->topo;
@@ -430,10 +431,10 @@ void procurar(ListaCad *lista, char *RG) {
   while (atual != NULL) {
     if (strcmp(atual->dados->RG, RG) == 0) {
       printf("-----------------------\n");
-      printf("Nome: %s", atual->dados->nome);
+      printf("Nome: %s\n", atual->dados->nome);
       printf("Data de Entrada: %02d/%02d/%d\n", atual->dados->entrada->dia,
              atual->dados->entrada->mes, atual->dados->entrada->ano);
-      printf("RG: %s", atual->dados->RG);
+      printf("RG: %s\n", atual->dados->RG);
       printf("Idade: %d\n", atual->dados->idade);
       printf("-----------------------\n");
       return;
@@ -591,111 +592,6 @@ void inserir(ListaCad *lista, char *nome, int idade, char *RG, Data *entrada) {
   }
 }
 
-void salvarDados(ListaCad *lista, Fila *fila, const char *nomeArquivo) {
-  FILE *arquivo = fopen(nomeArquivo, "w");
-  if (!arquivo) {
-    printf("Erro ao abrir o arquivo para salvar.\n");
-    return;
-  }
-
-  // Salvando pacientes cadastrados
-  Cadastro *atualCad = lista->primeiro;
-  fprintf(arquivo, "Pacientes Cadastrados:\n");
-  while (atualCad != NULL) {
-    fprintf(arquivo, "Nome: %s\n", atualCad->dados->nome);
-    fprintf(arquivo, "Idade: %d\n", atualCad->dados->idade);
-    fprintf(arquivo, "RG: %s\n", atualCad->dados->RG);
-    fprintf(arquivo, "Data de Entrada: %02d/%02d/%04d\n",
-            atualCad->dados->entrada->dia, atualCad->dados->entrada->mes,
-            atualCad->dados->entrada->ano);
-    fprintf(arquivo, "-----------------------\n");
-    atualCad = atualCad->proximo;
-  }
-
-  // Salvando pacientes na fila de espera
-  CFila *atualFila = fila->head;
-  fprintf(arquivo, "\nPacientes na Fila de Espera:\n");
-  while (atualFila != NULL) {
-    fprintf(arquivo, "Nome: %s\n", atualFila->dados->nome);
-    fprintf(arquivo, "Idade: %d\n", atualFila->dados->idade);
-    fprintf(arquivo, "RG: %s\n", atualFila->dados->RG);
-    fprintf(arquivo, "Data de Entrada: %02d/%02d/%04d\n",
-            atualFila->dados->entrada->dia, atualFila->dados->entrada->mes,
-            atualFila->dados->entrada->ano);
-    fprintf(arquivo, "-----------------------\n");
-    atualFila = atualFila->proximo;
-  }
-
-  fclose(arquivo);
-  printf("Dados salvos com sucesso em %s.\n", nomeArquivo);
-}
-
-void carregarDados(ListaCad *lista, Fila *fila, const char *nomeArquivo) {
-  FILE *arquivo = fopen(nomeArquivo, "r");
-  if (!arquivo) {
-    printf(
-        "Arquivo de dados não encontrado. Iniciando sem dados anteriores.\n");
-    return;
-  }
-
-  char linha[256];
-  Dados *dados = NULL;
-  int carregandoLista = 1; // 1 para lista de cadastrados, 0 para fila de espera
-
-  while (fgets(linha, sizeof(linha), arquivo)) {
-    if (strstr(linha, "Pacientes Cadastrados:")) {
-      carregandoLista = 1;
-    } else if (strstr(linha, "Pacientes na Fila de Espera:")) {
-      carregandoLista = 0;
-    } else if (strstr(linha, "Nome: ")) {
-      dados = malloc(sizeof(Dados));
-      dados->nome = strdup(linha + 6);
-      dados->nome[strcspn(dados->nome, "\n")] = 0; // Remover a nova linha
-    } else if (strstr(linha, "Idade: ")) {
-      sscanf(linha + 7, "%d", &dados->idade);
-    } else if (strstr(linha, "RG: ")) {
-      dados->RG = strdup(linha + 4);
-      dados->RG[strcspn(dados->RG, "\n")] = 0;
-    } else if (strstr(linha, "Data de Entrada: ")) {
-      dados->entrada = malloc(sizeof(Data));
-      sscanf(linha + 17, "%d/%d/%d", &dados->entrada->dia, &dados->entrada->mes,
-             &dados->entrada->ano);
-
-      // Adicionando dados na lista ou fila
-      if (carregandoLista) {
-        Cadastro *novoCad = criar_cadastro(dados->nome, dados->idade, dados->RG,
-                                           dados->entrada);
-        novoCad->proximo = lista->primeiro;
-        lista->primeiro = novoCad;
-        lista->qtde++;
-      } else {
-        CFila *novoFila =
-            criar_cfila(dados->nome, dados->idade, dados->RG, dados->entrada);
-        if (fila->qtd == 0) {
-          fila->head = novoFila;
-          fila->tail = novoFila;
-        } else {
-          fila->tail->proximo = novoFila;
-          novoFila->anterior = fila->tail;
-          fila->tail = novoFila;
-        }
-        fila->qtd++;
-      }
-    }
-  }
-
-  fclose(arquivo);
-  printf("Dados carregados com sucesso de %s.\n", nomeArquivo);
-}
-
-void opcaoSalvar(ListaCad *lista, Fila *fila) {
-  salvarDados(lista, fila, "dados_pacientes.txt");
-}
-
-void opcaoCarregar(ListaCad *lista, Fila *fila) {
-  carregarDados(lista, fila, "dados_pacientes.txt");
-}
-
 void menu() {
   printf("-----------------------\n");
   printf("Escolha uma opção:\n");
@@ -703,15 +599,17 @@ void menu() {
   printf("2. Atendimento\n");
   printf("3. Pesquisar\n");
   printf("4. Desfazer\n");
-  printf("5. Carregar / Salvar\n");
+  printf("5. Salvar\n");
   printf("6. Sobre\n");
   printf("0. Sair\n");
   printf("-----------------------\n");
+  printf("\n");
   printf("Digite sua escolha: ");
 }
 
 void print_cadatrar() {
   printf("Cadastro: \n");
+  printf("\n");
   printf("------------------------\n");
   printf("Qual operacao deseja fazer ? \n");
   printf("1. Novo Paciente\n");
@@ -721,11 +619,13 @@ void print_cadatrar() {
   printf("5. Remover paciente\n");
   printf("0. Sair\n");
   printf("------------------------\n");
+  printf("\n");
   printf("Digite sua escolha: ");
 }
 
 void print_atendimento() {
   printf("Atendimento: \n");
+  printf("\n");
   printf("----------------------------------\n");
   printf("Qual operacao deseja fazer ? \n");
   printf("1. Enfileirar paciente\n");
@@ -733,6 +633,7 @@ void print_atendimento() {
   printf("3. Mostrar fila\n");
   printf("0. Sair\n");
   printf("-----------------------------------\n");
+  printf("\n");
   printf("Digite sua escolha: ");
 }
 
@@ -763,6 +664,70 @@ void print_pesquisa() {
   printf("4. Registros ordenados por idade\n");
   printf("------------------------------------------------\n");
 }
+void salvarLista(ListaCad *lista) {
+  FILE *arquivo = fopen("lista_cadastros.txt", "w");
+  if (arquivo == NULL) {
+    printf("Erro ao abrir o arquivo para salvar.\n");
+    return;
+  }
+
+  Cadastro *atual = lista->primeiro;
+  while (atual != NULL) {
+    // Salvar os dados do cadastro no arquivo
+    fprintf(arquivo, "%s;%d;%s;%d/%d/%d\n", atual->dados->nome,
+            atual->dados->idade, atual->dados->RG, atual->dados->entrada->dia,
+            atual->dados->entrada->mes, atual->dados->entrada->ano);
+    atual = atual->proximo;
+  }
+
+  fclose(arquivo);
+  printf("Lista salva com sucesso!\n");
+}
+
+void carregarLista(ListaCad *lista) {
+  FILE *arquivo = fopen("lista_cadastros.txt", "r");
+  if (arquivo == NULL) {
+    printf("Erro ao abrir o arquivo para carregar.\n");
+    return;
+  }
+
+  char nome[100], rg[20];
+  int idade, dia, mes, ano;
+  while (fscanf(arquivo, "%99[^;];%d;%19[^;];%d/%d/%d\n", nome, &idade, rg,
+                &dia, &mes, &ano) == 6) {
+    // Alocar memória para os novos dados e cadastro
+    Dados *dados = (Dados *)malloc(sizeof(Dados));
+    Cadastro *novoCadastro = (Cadastro *)malloc(sizeof(Cadastro));
+
+    if (dados == NULL || novoCadastro == NULL) {
+      printf("Erro ao alocar memória.\n");
+      fclose(arquivo);
+      return;
+    }
+
+    dados->idade = idade;
+    dados->nome = strdup(nome); // Usamos strdup para copiar a string
+    dados->RG = strdup(rg);     // Usamos strdup para copiar a string
+    dados->entrada = (Data *)malloc(sizeof(Data));
+    if (dados->entrada == NULL) {
+      printf("Erro ao alocar memória para a data.\n");
+      fclose(arquivo);
+      return;
+    }
+    dados->entrada->dia = dia;
+    dados->entrada->mes = mes;
+    dados->entrada->ano = ano;
+
+    novoCadastro->dados = dados;
+    novoCadastro->proximo = lista->primeiro;
+    lista->primeiro = novoCadastro; // Inserção no início da lista
+    lista->qtde++;                  // Aumenta a quantidade de cadastros
+  }
+
+  fclose(arquivo);
+  printf("Lista carregada com sucesso!\n");
+}
+
 int main() {
   ListaCad *lista = criar_listaCad();
   int escolha;
@@ -774,6 +739,7 @@ int main() {
   Arvore *arvoreano = cria_arvore();
   Arvore *arvoreidade = cria_arvore();
   Stack *stack = criar_stack();
+  carregarLista(lista);
 
   do {
     menu();
@@ -814,6 +780,7 @@ int main() {
 
           inserir(lista, nome, idade, RG, entrada);
           printf("Paciente cadastrado com sucesso!\n");
+          printf("\n");
 
           inserir_todos_na_arvore(lista, arvoredia, inserir_arvore_dia);
           inserir_todos_na_arvore(lista, arvoremes, inserir_arvore_mes);
@@ -947,7 +914,6 @@ int main() {
           break;
 
         case 0:
-          printf("Sair \n");
           break;
 
         default:
@@ -960,37 +926,12 @@ int main() {
     case 4:
       printf("Desfazer: \n");
       desfazer(stack, lista, fila);
-      printf("Ultima operação desfeita com sucesso!\n");
+
       break;
 
     case 5:
-      do {
-        printf("Carregar / Salvar:\n");
-        printf("1. Carregar\n");
-        printf("2. Salvar\n");
-        printf("0. Sair\n");
-        scanf("%d", &subEscolha);
-
-        switch (subEscolha) {
-        case 1:
-          printf("Carregando cadastros\n");
-          opcaoCarregar(lista, fila);
-          break;
-
-        case 2:
-          printf("Salvando cadastros:\n");
-          opcaoSalvar(lista, fila);
-          break;
-
-        case 0:
-          printf("Sair \n");
-          break;
-
-        default:
-          printf("Opção inválida\n");
-          break;
-        }
-      } while (subEscolha != 0);
+      printf("Salvar:\n");
+      salvarLista(lista);
       break;
 
     case 6:
