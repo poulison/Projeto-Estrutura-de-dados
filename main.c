@@ -324,7 +324,7 @@ void enfileirar_no_inicio(char *nome, int idade, char *RG, Data *entrada,
   fila->qtd++;
 }
 
-// Função para desenfileirar do início da fila
+// Função para desenfileirar do fim da fila
 int desinfileirar_do_fim(Fila *fila) {
   if (fila->qtd > 0) {
     CFila *temp = fila->tail;
@@ -534,6 +534,7 @@ void desfazer(Stack *pilha, ListaCad *lista, Fila *fila) {
   }
 
   pop(pilha); // Remove o topo da pilha após desfazer a operação
+  printf("Operação desfeita com sucesso!\n");
 }
 
 // Função para atualizar informações de um cadastro específico pelo RG
